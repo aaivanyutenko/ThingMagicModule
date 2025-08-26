@@ -82,6 +82,7 @@ public class DragonfruitThingMagicWrapper {
                 new AndroidUsbReflection(manager, null, device, device.getDeviceClass());
                 return true;
             } else if (device.getVendorId() == NEW_THING_MAGIC_VENDOR_ID && device.getProductId() == NEW_THING_MAGIC_PRODUCT_ID) {
+                requestUsbPermission(context, manager, device);
                 try {
                     D2xxManager ftD2xx = D2xxManager.getInstance(context);
                     boolean isFtDevice = ftD2xx.isFtDevice(device);
