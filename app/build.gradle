@@ -1,0 +1,60 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'co.bytetechnology.thm'
+    //noinspection GrDeprecatedAPIUsage
+    compileSdk 36
+
+    signingConfigs {
+        universal {
+            storeFile file('keystore/platform.jks')
+            storePassword 'qwerty'
+            keyAlias 'android'
+            keyPassword 'qwerty'
+        }
+    }
+
+    defaultConfig {
+        applicationId "co.bytetechnology.thm"
+        minSdk 28
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.universal
+        }
+        release {
+            signingConfig signingConfigs.universal
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.constraintlayout
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+    implementation libs.timber
+    implementation libs.gson
+    implementation libs.ktsh
+    implementation files('libs/d2xx.jar')
+    implementation files('libs/mercuryapi.jar')
+    implementation files('libs/jmdns-3.4.1.jar')
+    implementation files('libs/ltkjava-1.0.0.6.jar')
+}
