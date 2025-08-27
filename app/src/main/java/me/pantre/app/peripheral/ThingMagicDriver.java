@@ -243,6 +243,7 @@ public class ThingMagicDriver {
      * IMPORTANT: We have a pool of read data object and handle them manually.
      */
     private TagTemperatureReadData readTagTemperature(final String epc, final int antenna, final long readDuration) throws Exception {
+        Timber.d("readTagTemperature() called with: epc = [" + epc + "], antenna = [" + antenna + "], readDuration = [" + readDuration + "]");
         final TagReadData[] tagReads = thingMagicReaderWrapper.readTemperatureCode(antenna, readDuration);
 
 

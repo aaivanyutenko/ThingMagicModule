@@ -214,7 +214,6 @@ public class DragonfruitThingMagicWrapper {
     }
 
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration) throws Exception {
-        Timber.d("readTemperatureCode() called with: antenna = [" + antenna + "], readDuration = [" + readDuration + "]");
         // Read temperature code from the tag.
         final Gen2.Select select = new Gen2.Select(false, Gen2.Bank.USER, TEMPERATURE_SENSOR_BIT_POINTER, 0, new byte[]{});
         final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);

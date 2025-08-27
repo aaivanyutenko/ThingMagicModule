@@ -11,6 +11,7 @@ import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,5 +23,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onTagReads(TagReadData[] tagReads) {
+        for (TagReadData tagData : tagReads) {
+            Timber.d("TagReadData: epc = %s, rssi = %s", tagData.getEpc(), tagData.getRssi());
+        }
     }
 }
