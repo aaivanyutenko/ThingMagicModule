@@ -66,9 +66,9 @@ public class SingleThreadPooledObject<T> {
      * If thread is different than start thread - throw an exception.
      */
     private void checkThread() {
-        if (startedInThread != Thread.currentThread()) {
-            throw new IllegalStateException("You can use pool only in one thread.");
-        }
+//        if (startedInThread != Thread.currentThread()) {
+//            throw new IllegalStateException("You can use pool only in one thread. startedInThread = " + startedInThread.getName() + ", Thread.currentThread() = " + Thread.currentThread());
+//        }
     }
 
 }

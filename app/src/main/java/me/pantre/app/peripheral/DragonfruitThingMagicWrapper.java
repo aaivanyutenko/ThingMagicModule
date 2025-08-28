@@ -69,8 +69,11 @@ public class DragonfruitThingMagicWrapper {
         return readPlanAntInd == null ? 0 : readPlanAntInd.length;
     }
 
+    private final List<TagReadData> result = new ArrayList<>();
+
     public void createReader() throws Exception {
         thingMagicReader = Reader.create(TM_URI_STRING);
+        thingMagicReader.addReadListener((reader, tagReadData) -> result.add(transformTagReadData(tagReadData)));
     }
 
     public boolean initializeUsbDevice(Context context) {
@@ -182,15 +185,15 @@ public class DragonfruitThingMagicWrapper {
         }
     }
 
-    public TagReadData[] read(final long duration) throws Exception {
-        final List<TagReadData> result = new ArrayList<>();
-
-        final com.thingmagic.TagReadData[] tagReads = thingMagicReader.read(duration);
-
-        for (com.thingmagic.TagReadData tagReadData : tagReads) {
-            result.add(transformTagReadData(tagReadData));
+    public TagReadData[] read(final long duration) {
+        result.clear();
+        thingMagicReader.startReading();
+        try {
+            Thread.sleep(duration);
+        } catch (InterruptedException e) {
+            Timber.e(e);
         }
-
+        thingMagicReader.stopReading();
         return result.toArray(new TagReadData[0]);
     }
 
