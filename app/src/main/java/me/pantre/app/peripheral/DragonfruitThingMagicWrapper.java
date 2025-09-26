@@ -170,6 +170,35 @@ public class DragonfruitThingMagicWrapper {
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT, 7000);
     }
 
+    public void paramSetTari(String value) throws Exception {
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_TARI, Gen2.Tari.valueOf(value));
+    }
+
+    public void paramSetBlf(String value) throws Exception {
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_BLF, Gen2.LinkFrequency.valueOf(value));
+    }
+
+    public void paramSetTagEncoding(String value) throws Exception {
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_TAGENCODING, Gen2.TagEncoding.valueOf(value));
+    }
+
+    public void paramSetQAlgorithm(String value) throws Exception {
+        if (value.equals("dynamic")) {
+            thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_Q, new Gen2.DynamicQ());
+        } else if (value.startsWith("static")) {
+            int initial = Integer.parseInt(value.substring(7));
+            thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_Q, new Gen2.StaticQ(initial));
+        }
+    }
+
+    public void paramSetSession(String value) throws Exception {
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_SESSION, Gen2.Session.valueOf(value));
+    }
+
+    public void paramSetTarget(String value) throws Exception {
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_TARGET, Gen2.Target.valueOf(value));
+    }
+
     public boolean isConnected() {
         return thingMagicReader != null;
     }

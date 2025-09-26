@@ -150,6 +150,7 @@ public class ThingMagicDriver {
 
     private void startReading() {
         Timber.d("Started reading");
+        setupPreferences();
         //noinspection InfiniteLoopStatement
         while (true) {
             if (IS_LOGGING_ENABLED)
@@ -177,6 +178,20 @@ public class ThingMagicDriver {
             // Read through all antennas is done, propagate events.
 
             readTemperatureTags();
+        }
+    }
+
+    private void setupPreferences() {
+        try {
+            thingMagicReaderWrapper.paramSetTari("TARI_25US");
+            thingMagicReaderWrapper.paramSetBlf("LINK250KHZ");
+            thingMagicReaderWrapper.paramSetTagEncoding("M4");
+            thingMagicReaderWrapper.paramSetQAlgorithm("dynamic");
+            thingMagicReaderWrapper.paramSetSession("S0");
+            thingMagicReaderWrapper.paramSetTarget("A");
+        } catch (Exception e) {
+            Timber.d("setupPreferences error:");
+            Timber.e(e);
         }
     }
 
