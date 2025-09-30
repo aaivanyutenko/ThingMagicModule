@@ -19,6 +19,7 @@ import com.thingmagic.ReaderUtil;
 import com.thingmagic.SimpleReadPlan;
 import com.thingmagic.SingleThreadPooledObject;
 import com.thingmagic.TMConstants;
+import com.thingmagic.TagFilter;
 import com.thingmagic.TagOp;
 import com.thingmagic.TagProtocol;
 
@@ -45,7 +46,7 @@ public class DragonfruitThingMagicWrapper {
     public static final int THING_MAGIC_VENDOR_ID = 8200;
     public static final int THING_MAGIC_PRODUCT_ID = 4100;
 
-    private static final int USER_MEM_TEMP_CODE_ADDR = 0;  // 1 word
+    private static final int USER_MEM_TEMP_CODE_ADDR = 0xA0;  // 1 word
     private static final int USER_MEM_CALIBRATION_ADDR = 1; // 4 words
 
     private static final String TM_URI_STRING = "tmr:///dev";
@@ -173,6 +174,7 @@ public class DragonfruitThingMagicWrapper {
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_ENABLE_READ_FILTERING, true);
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_COMMANDTIMEOUT, 2000);
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT, 7000);
+//        thingMagicReader.paramSet(TMConstants.TMR_PARAM_POWERMODE, Reader.Region);
     }
 
     public void paramSetTari(String value) throws Exception {
@@ -250,15 +252,19 @@ public class DragonfruitThingMagicWrapper {
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, String epc) throws Exception {
         // Read temperature code from the tag.
         String[] epcPrefixes = {"00000000", "00004716", "00004717"};
-        final Gen2.Select select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, toByteArray(epc));
+        final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, toByteArray(epc));
 
         // Read temperature code (1 word)
-        byte[] tempCodeBytes = (byte[]) thingMagicReader.executeTagOp(
+        Object tempCodeBytes = thingMagicReader.executeTagOp(
                 new Gen2.ReadData(Gen2.Bank.USER, USER_MEM_TEMP_CODE_ADDR, (byte) 1), select);
-        System.out.println("tempCodeBytes = " + Arrays.toString(tempCodeBytes));
+        if (tempCodeBytes instanceof short[]) {
+            System.out.println("tempCodeBytes = " + Arrays.toString((short[]) tempCodeBytes));
+        } else {
+            System.out.println("tempCodeBytes = " + tempCodeBytes);
+        }
 
         // Read calibration block (4 words)
-        byte[] calibrationBytes = (byte[]) thingMagicReader.executeTagOp(
+        short[] calibrationBytes = (short[]) thingMagicReader.executeTagOp(
                 new Gen2.ReadData(Gen2.Bank.USER, USER_MEM_CALIBRATION_ADDR, (byte) 4), select);
         System.out.println("calibrationBytes = " + Arrays.toString(calibrationBytes));
 //        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
