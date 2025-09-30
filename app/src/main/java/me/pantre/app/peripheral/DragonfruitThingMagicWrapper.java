@@ -23,6 +23,7 @@ import com.thingmagic.TagOp;
 import com.thingmagic.TagProtocol;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -43,6 +44,9 @@ public class DragonfruitThingMagicWrapper {
     private static final int NEW_THING_MAGIC_PRODUCT_ID = 24597;
     public static final int THING_MAGIC_VENDOR_ID = 8200;
     public static final int THING_MAGIC_PRODUCT_ID = 4100;
+
+    private static final int USER_MEM_TEMP_CODE_ADDR = 0;  // 1 word
+    private static final int USER_MEM_CALIBRATION_ADDR = 1; // 4 words
 
     private static final String TM_URI_STRING = "tmr:///dev";
     private static final String ACTION_USB_PERMISSION = "com.thingmagic.rfidreader.services.USB_PERMISSION";
@@ -243,16 +247,27 @@ public class DragonfruitThingMagicWrapper {
         tagReadDataPool.returnObject(o);
     }
 
-    public TagReadData[] readTemperatureCode(final int antenna, final long readDuration) throws Exception {
+    public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, String epc) throws Exception {
         // Read temperature code from the tag.
         String[] epcPrefixes = {"00000000", "00004716", "00004717"};
-        final Gen2.Select select = new Gen2.Select(false, Gen2.Bank.EPC, 32, 32, toByteArray(epcPrefixes[0]));
-        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
+        final Gen2.Select select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, toByteArray(epc));
 
-        // Keep weight high to make power cycle longer.
-        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, select, onChipTempRead, TEMPERATURE_WEIGHT, true);
-        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
-        return read(readDuration);
+        // Read temperature code (1 word)
+        byte[] tempCodeBytes = (byte[]) thingMagicReader.executeTagOp(
+                new Gen2.ReadData(Gen2.Bank.USER, USER_MEM_TEMP_CODE_ADDR, (byte) 1), select);
+        System.out.println("tempCodeBytes = " + Arrays.toString(tempCodeBytes));
+
+        // Read calibration block (4 words)
+        byte[] calibrationBytes = (byte[]) thingMagicReader.executeTagOp(
+                new Gen2.ReadData(Gen2.Bank.USER, USER_MEM_CALIBRATION_ADDR, (byte) 4), select);
+        System.out.println("calibrationBytes = " + Arrays.toString(calibrationBytes));
+//        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
+//
+//        // Keep weight high to make power cycle longer.
+//        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, select, onChipTempRead, TEMPERATURE_WEIGHT, true);
+//        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
+//        return read(readDuration);
+        return null;
     }
 
     private byte[] toByteArray(String hex) {
