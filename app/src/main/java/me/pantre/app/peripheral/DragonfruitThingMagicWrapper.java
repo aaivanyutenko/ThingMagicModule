@@ -1,5 +1,7 @@
 package me.pantre.app.peripheral;
 
+import static com.thingmagic.ReaderUtil.hexStringToByteArray;
+
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +17,6 @@ import com.thingmagic.Gen2;
 import com.thingmagic.ReadPlan;
 import com.thingmagic.Reader;
 import com.thingmagic.ReaderException;
-import com.thingmagic.ReaderUtil;
 import com.thingmagic.SimpleReadPlan;
 import com.thingmagic.SingleThreadPooledObject;
 import com.thingmagic.TMConstants;
@@ -139,7 +140,7 @@ public class DragonfruitThingMagicWrapper {
     private void setupReaderParameters(String licenseKey, RfidBand rfidBand, boolean isOldThingMagicModule) throws Exception {
         setupRegion(rfidBand.getThingMagicRegionCode());
         if (isOldThingMagicModule) {
-            thingMagicReader.paramSet(TMConstants.TMR_PARAM_LICENSE_KEY, ReaderUtil.hexStringToByteArray(licenseKey));
+            thingMagicReader.paramSet(TMConstants.TMR_PARAM_LICENSE_KEY, hexStringToByteArray(licenseKey));
         }
         setReadPower(READ_POWER);
         logReaderInfo();
@@ -252,7 +253,9 @@ public class DragonfruitThingMagicWrapper {
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, String epc) throws Exception {
         // Read temperature code from the tag.
         String[] epcPrefixes = {"00000000", "00004716", "00004717"};
-        final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, toByteArray(epc));
+        SensorTagType type = detectTagType(epc);
+        System.out.println("SensorTagType(" + epc + ") = " + type);
+        final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, hexStringToByteArray(epc));
 
         // Read temperature code (1 word)
         Object tempCodeBytes = thingMagicReader.executeTagOp(
@@ -276,14 +279,43 @@ public class DragonfruitThingMagicWrapper {
         return null;
     }
 
-    private byte[] toByteArray(String hex) {
-        int len = hex.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-                    + Character.digit(hex.charAt(i+1), 16));
+    public enum SensorTagType {
+        SL900A,      // AMS sensor tag
+        MAGNUS_S3,   // Magnus S3 sensor tag
+        AXZON,       // Axzon sensor tag
+        GENERIC      // Generic approach
+    }
+
+    /**
+     * Detect tag type automatically
+     */
+    public SensorTagType detectTagType(String epc) {
+        // Try different memory locations to detect tag type
+        TagFilter filter = new Gen2.Select(false, Gen2.Bank.EPC, 32,
+                epc.length() * 4,
+                hexStringToByteArray(epc));
+
+        try {
+            // Try SL900A signature read
+            Gen2.ReadData readOp = new Gen2.ReadData(Gen2.Bank.USER, 0x00, (byte) 2);
+            thingMagicReader.executeTagOp(readOp, filter);
+            Timber.d("Detected as SL900A or compatible");
+            return SensorTagType.SL900A;
+        } catch (Exception e) {
+            // Not SL900A, try others
         }
-        return data;
+
+        try {
+            // Try RESERVED bank (Axzon tags)
+            Gen2.ReadData readOp = new Gen2.ReadData(Gen2.Bank.RESERVED, 0x0A, (byte) 1);
+            thingMagicReader.executeTagOp(readOp, filter);
+            Timber.d("Detected as Axzon or compatible");
+            return SensorTagType.AXZON;
+        } catch (Exception e) {
+            // Not Axzon
+        }
+
+        return SensorTagType.GENERIC;
     }
 
     public TagReadData[] readTemperatureCalibration(final String epc, final int antenna, final long readDuration) throws Exception {
