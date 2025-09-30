@@ -262,14 +262,16 @@ public class DragonfruitThingMagicWrapper {
                 new Gen2.ReadData(Gen2.Bank.EPC, 2, (byte) 8), select);
         if (tempCodeBytes instanceof short[]) {
             System.out.println("tempCodeBytes = " + Arrays.toString((short[]) tempCodeBytes));
+            MagnusTemperature temperature = parseMagnusS3Data((short[]) tempCodeBytes, epc);
+            System.out.println("parseMagnusS3Data: temperature = " + temperature);
         } else {
             System.out.println("tempCodeBytes = " + tempCodeBytes);
         }
 
         // Read calibration block (4 words)
-        short[] calibrationBytes = (short[]) thingMagicReader.executeTagOp(
-                new Gen2.ReadData(Gen2.Bank.USER, USER_MEM_CALIBRATION_ADDR, (byte) 4), select);
-        System.out.println("calibrationBytes = " + Arrays.toString(calibrationBytes));
+//        short[] calibrationBytes = (short[]) thingMagicReader.executeTagOp(
+//                new Gen2.ReadData(Gen2.Bank.USER, USER_MEM_CALIBRATION_ADDR, (byte) 4), select);
+//        System.out.println("calibrationBytes = " + Arrays.toString(calibrationBytes));
 //        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
 //
 //        // Keep weight high to make power cycle longer.
@@ -277,6 +279,127 @@ public class DragonfruitThingMagicWrapper {
 //        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
 //        return read(readDuration);
         return null;
+    }
+
+    public static class MagnusTemperature {
+        public String fullEpc;          // Complete EPC with temperature
+        public String baseEpc;          // Base EPC (ID without temp)
+        public double temperature;      // Temperature in Celsius
+        public int rawTempCode;        // Raw temperature code
+        public int rssi;               // Signal strength
+        public long timestamp;         // Read timestamp
+
+        public MagnusTemperature(String fullEpc, String baseEpc, double temperature,
+                                 int rawTempCode, int rssi, long timestamp) {
+            this.fullEpc = fullEpc;
+            this.baseEpc = baseEpc;
+            this.temperature = temperature;
+            this.rawTempCode = rawTempCode;
+            this.rssi = rssi;
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Magnus S3 [%s] Temp: %.1f°C (raw: 0x%04X) RSSI: %d dBm",
+                    baseEpc, temperature, rawTempCode, rssi);
+        }
+    }
+
+    /**
+     * Parse Magnus S3 data from read operation
+     */
+    private MagnusTemperature parseMagnusS3Data(short[] data, String originalEpc) {
+        if (data.length < 6) {
+            Timber.d("Insufficient data received: " + data.length + " words");
+            return null;
+        }
+
+        // Reconstruct full EPC from data
+        StringBuilder epcBuilder = new StringBuilder();
+        for (short word : data) {
+            epcBuilder.append(String.format("%04X", word & 0xFFFF));
+        }
+
+        String fullEpc = epcBuilder.toString();
+        return parseTemperatureFromEPC(fullEpc, 0);
+    }
+
+    /**
+     * Parse Magnus S3 temperature from EPC string
+     * Magnus S3 structure: [Base EPC][Temperature Code][Checksum]
+     */
+    private MagnusTemperature parseTemperatureFromEPC(String epc, int rssi) {
+        if (epc == null || epc.length() < 24) {
+            Timber.d("EPC too short: %s", epc);
+            return null;
+        }
+
+        try {
+            // Magnus S3 typical EPC structure (24 hex chars = 96 bits):
+            // - First 16 chars (64 bits): Base EPC/ID
+            // - Next 4 chars (16 bits): Temperature data
+            // - Last 4 chars (16 bits): Moisture/other sensors or checksum
+
+            String baseEpc = epc.substring(0, Math.min(16, epc.length()));
+
+            // Temperature is typically in bytes 8-9 (chars 16-19)
+            if (epc.length() >= 20) {
+                String tempHex = epc.substring(16, 20);
+                int tempCode = Integer.parseInt(tempHex, 16);
+
+                // Convert to temperature using Magnus S3 formula
+                double temperature = convertMagnusS3Temperature(tempCode);
+
+                // Sanity check
+                if (temperature >= -40 && temperature <= 85) {
+                    return new MagnusTemperature(
+                            epc,
+                            baseEpc,
+                            temperature,
+                            tempCode,
+                            rssi,
+                            System.currentTimeMillis()
+                    );
+                } else {
+                    Timber.d("Temperature out of range: " + temperature);
+                }
+            }
+        } catch (Exception e) {
+            Timber.e(e, "Error parsing EPC: " + epc);
+        }
+
+        return null;
+    }
+
+    /**
+     * Convert Magnus S3 temperature code to Celsius
+     * Magnus S3 uses a 16-bit temperature encoding
+     * Formula: Temperature = (code - 2731.5) / 10
+     * This gives temperature in Celsius with 0.1°C resolution
+     */
+    private double convertMagnusS3Temperature(int tempCode) {
+        // Method 1: Standard Magnus S3 formula
+        // Temperature in Kelvin * 10, subtract 2731.5 to get Celsius
+        double temp1 = (tempCode - 2731.5) / 10.0;
+
+        // Method 2: Alternative formula for some Magnus S3 variants
+        // Direct encoding: (code * 0.0625) - 40
+        double temp2 = (tempCode * 0.0625) - 40.0;
+
+        // Method 3: Simple linear mapping
+        // Some variants use: (code / 10) - 273.15
+        double temp3 = (tempCode / 10.0) - 273.15;
+
+        // Use Method 1 (most common), but log others for debugging
+        Timber.d("Temp conversions - M1: %.2f, M2: %.2f, M3: %.2f", temp1, temp2, temp3);
+
+        // Return the most reasonable value
+        if (temp1 >= -40 && temp1 <= 85) return temp1;
+        if (temp2 >= -40 && temp2 <= 85) return temp2;
+        if (temp3 >= -40 && temp3 <= 85) return temp3;
+
+        return temp1; // Default to method 1
     }
 
     public enum SensorTagType {
