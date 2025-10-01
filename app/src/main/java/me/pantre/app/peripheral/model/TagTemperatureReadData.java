@@ -1,6 +1,7 @@
 package me.pantre.app.peripheral.model;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import me.pantre.app.util.PantryUtils;
@@ -56,6 +57,7 @@ public class TagTemperatureReadData extends TagReadData {
         final double divider = 10;
         final double shifter = 800;
 
+        Timber.d("temp1 = %d temp2 = %d temperatureCode = %d code1 = %d code2 = %d", temp1, temp2, temperatureCode, code1, code2);
         return ((double) (temp2 - temp1) * (double) (temperatureCode - code1) / (double) (code2 - code1) + temp1 - shifter) / divider;
     }
 
@@ -140,11 +142,10 @@ public class TagTemperatureReadData extends TagReadData {
     public boolean setTemperatureCodeData(final byte[] data) {
         if (IS_LOGGING_ENABLED) Timber.v("Temperature code raw data: %s", Arrays.toString(data));
         if (checkTemperatureCodeData(data)) {
-            final ByteBuffer wrapped = ByteBuffer.wrap(data);
+            ByteBuffer wrapped = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN);
 
             // The Temperature Code occupies the least-significant 12 bits of the word; the other bits should be 0
-            final int mask = 0x0FFF;
-            temperatureCode = wrapped.getShort() & mask;
+            temperatureCode = wrapped.getShort() & 0x0FFF;
 
             if (IS_LOGGING_ENABLED) Timber.d("Temperature code is %d", temperatureCode);
 

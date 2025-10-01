@@ -259,7 +259,7 @@ public class DragonfruitThingMagicWrapper {
 
         // Read temperature code (1 word)
         Object tempCodeBytes = thingMagicReader.executeTagOp(
-                new Gen2.ReadData(Gen2.Bank.EPC, 2, (byte) 8), select);
+                new Gen2.ReadData(Gen2.Bank.USER, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1), select);
         if (tempCodeBytes instanceof short[]) {
             System.out.println("tempCodeBytes = " + Arrays.toString((short[]) tempCodeBytes));
             MagnusTemperature temperature = parseMagnusS3Data((short[]) tempCodeBytes, epc);
