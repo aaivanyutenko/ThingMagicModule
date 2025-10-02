@@ -257,6 +257,9 @@ public class DragonfruitThingMagicWrapper {
         System.out.println("SensorTagType(" + epc + ") = " + type);
         final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, hexStringToByteArray(epc));
 
+        Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.TID, 0, (byte) 4), select);
+        System.out.println("tidObject = " + tidObject);
+
         // Read temperature code (1 word)
         Object tempCodeBytes = thingMagicReader.executeTagOp(
                 new Gen2.ReadData(Gen2.Bank.EPC, 2, (byte) 8), select);
