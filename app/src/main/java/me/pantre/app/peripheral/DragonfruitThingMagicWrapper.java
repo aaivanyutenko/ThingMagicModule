@@ -272,11 +272,21 @@ public class DragonfruitThingMagicWrapper {
         System.out.println("SensorTagType(" + epc + ") = " + type);
         final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, hexStringToByteArray(epc));
 
-        short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 6);
+        short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 12);
         System.out.println("tidData = " + shortsToHexString(tidData));
 
+        byte[] userData = thingMagicReader.readTagMemBytes(
+                tagReadData.getTag(),
+                Gen2.Bank.USER.rep,
+                0,  // Start address
+                2   // Number of bytes for temperature
+        );
+        int tempRaw = ((userData[0] & 0xFF) << 8) | (userData[1] & 0xFF);
+        float t = parseTemperature(tempRaw);
+        System.out.println("temperature (tid) = " + t);
+
         Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.TID, 0, (byte) 4), select);
-        System.out.println("tidObject = " + tidObject);
+        System.out.println("tidObject = " + shortsToHexString((short[]) tidObject));
 
         // Read temperature code (1 word)
         Object tempCodeBytes = thingMagicReader.executeTagOp(
@@ -300,6 +310,15 @@ public class DragonfruitThingMagicWrapper {
 //        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
 //        return read(readDuration);
         return null;
+    }
+
+    private float parseTemperature(int rawValue) {
+        // E282 specific conversion - adjust based on datasheet
+        // Common format: signed 16-bit value with resolution (e.g., 0.1°C)
+        if (rawValue > 32767) {
+            rawValue -= 65536; // Handle negative temperatures
+        }
+        return rawValue / 10.0f; // Adjust divisor based on resolution
     }
 
     public static class MagnusTemperature {
