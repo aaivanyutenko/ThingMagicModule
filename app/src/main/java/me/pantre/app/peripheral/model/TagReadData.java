@@ -3,6 +3,7 @@ package me.pantre.app.peripheral.model;
 import androidx.annotation.NonNull;
 
 import com.thingmagic.DefaultPooledObjectFactory;
+import com.thingmagic.TagData;
 
 import java.util.Arrays;
 
@@ -24,6 +25,7 @@ public class TagReadData {
     private int readCount;
     private byte[] data;
     private int antennaMultiplier;
+    private TagData tagData;
 
 
     /**
@@ -122,6 +124,13 @@ public class TagReadData {
         this.antennaMultiplier = antennaMultiplier;
     }
 
+    public void setTag(TagData tagData) {
+        this.tagData = tagData;
+    }
+
+    public TagData getTag() {
+        return tagData;
+    }
 
     /**
      * Factory to create TagReadData.

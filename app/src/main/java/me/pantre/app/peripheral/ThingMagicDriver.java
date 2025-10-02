@@ -215,7 +215,7 @@ public class ThingMagicDriver {
                 for (int shelf = 1; shelf <= SHELVES_COUNT; shelf++) {
                     if (shelvesList.contains(shelf)) {
                         dragonFruitFacade.setShelf(shelf);
-                        readTemperature(temperatureTagData.getEpc(), temperatureTagData.getAntenna());
+                        readTemperature(temperatureTagData, temperatureTagData.getAntenna());
                     }
                 }
             }
@@ -240,10 +240,10 @@ public class ThingMagicDriver {
     /**
      * Read temperature from RFMicron tag.
      */
-    private void readTemperature(final String epc, final int antenna) {
+    private void readTemperature(final TagReadData tagReadData, final int antenna) {
         TagTemperatureReadData tagTemperatureReadData = null;
         try {
-            tagTemperatureReadData = readTagTemperature(epc, antenna, readDurationInd);
+            tagTemperatureReadData = readTagTemperature(tagReadData, antenna, readDurationInd);
         } catch (Exception e) {
             Timber.e(e, "ThingMagic temperature read exception");
         }
@@ -257,14 +257,14 @@ public class ThingMagicDriver {
      * Read temperature from RFMicron tag.
      * IMPORTANT: We have a pool of read data object and handle them manually.
      */
-    private TagTemperatureReadData readTagTemperature(final String epc, final int antenna, final long readDuration) throws Exception {
-        Timber.d("readTagTemperature() called with: epc = [" + epc + "], antenna = [" + antenna + "], readDuration = [" + readDuration + "]");
-        final TagReadData[] tagReads = thingMagicReaderWrapper.readTemperatureCode(antenna, readDuration, epc);
+    private TagTemperatureReadData readTagTemperature(final TagReadData tagReadData, final int antenna, final long readDuration) throws Exception {
+        Timber.d("readTagTemperature() called with: epc = [" + tagReadData.getEpc() + "], antenna = [" + antenna + "], readDuration = [" + readDuration + "]");
+        final TagReadData[] tagReads = thingMagicReaderWrapper.readTemperatureCode(antenna, readDuration, tagReadData);
 
 
         byte[] temperatureCodeData = null;
-        for (final TagReadData tagReadData : tagReads) {
-            if (tagReadData.isTemperatureTag() && epc.equals(tagReadData.getEpc())) {
+        for (final TagReadData trd : tagReads) {
+            if (tagReadData.isTemperatureTag() && trd.getEpc().equals(tagReadData.getEpc())) {
                 temperatureCodeData = tagReadData.getData();
             }
             thingMagicReaderWrapper.returnObject(tagReadData);
@@ -275,7 +275,7 @@ public class ThingMagicDriver {
             return null;
         }
 
-        final TagTemperatureReadData calibrationReadData = readCalibrationTagTemperature(epc, antenna, readDuration);
+        final TagTemperatureReadData calibrationReadData = readCalibrationTagTemperature(tagReadData.getEpc(), antenna, readDuration);
         if (calibrationReadData == null) {
             if (IS_LOGGING_ENABLED) Timber.w("Can't read calibration data.");
 

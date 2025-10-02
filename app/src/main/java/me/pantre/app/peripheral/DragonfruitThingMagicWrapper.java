@@ -242,6 +242,7 @@ public class DragonfruitThingMagicWrapper {
         result.setPhase(tagReadData.getPhase());
         result.setReadCount(tagReadData.getReadCount());
         result.setData(tagReadData.getData());
+        result.setTag(tagReadData.getTag());
 
         return result;
     }
@@ -250,12 +251,29 @@ public class DragonfruitThingMagicWrapper {
         tagReadDataPool.returnObject(o);
     }
 
-    public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, String epc) throws Exception {
+    public static String shortsToHexString(short[] shorts) {
+        if (shorts == null || shorts.length == 0) {
+            return "";
+        }
+        StringBuilder hex = new StringBuilder();
+        for (short s : shorts) {
+            // Convert short to two bytes (big-endian)
+            hex.append(String.format("%02X", (s >> 8) & 0xFF)); // High byte
+            hex.append(String.format("%02X", s & 0xFF));        // Low byte
+        }
+        return hex.toString();
+    }
+
+    public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, TagReadData tagReadData) throws Exception {
         // Read temperature code from the tag.
+        String epc = tagReadData.getEpc();
         String[] epcPrefixes = {"00000000", "00004716", "00004717"};
         SensorTagType type = detectTagType(epc);
         System.out.println("SensorTagType(" + epc + ") = " + type);
         final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, hexStringToByteArray(epc));
+
+        short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 6);
+        System.out.println("tidData = " + shortsToHexString(tidData));
 
         Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.TID, 0, (byte) 4), select);
         System.out.println("tidObject = " + tidObject);
