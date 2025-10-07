@@ -242,7 +242,7 @@ public class DragonfruitThingMagicWrapper {
         result.setPhase(tagReadData.getPhase());
         result.setReadCount(tagReadData.getReadCount());
         result.setData(tagReadData.getData());
-        result.setTag(tagReadData.getTag());
+        result.setTag(tagReadData);
         result.setTIDMemData(tagReadData.getTIDMemData());
 
         return result;
@@ -296,8 +296,8 @@ public class DragonfruitThingMagicWrapper {
 
         byte[] userData = thingMagicReader.readTagMemBytes(
                 tagReadData.getTag(),
-                Gen2.Bank.USER.rep,
-                0,  // Start address
+                Gen2.Bank.RESERVED.rep,
+                0x0E,  // Start address
                 2   // Number of bytes for temperature
         );
         System.out.println("tempRaw = " + Arrays.toString(userData));
