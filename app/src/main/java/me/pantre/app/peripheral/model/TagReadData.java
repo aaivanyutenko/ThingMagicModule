@@ -24,6 +24,7 @@ public class TagReadData {
     private int phase;
     private int readCount;
     private byte[] data;
+    private byte[] tidMemData;
     private int antennaMultiplier;
     private TagData tagData;
 
@@ -130,6 +131,14 @@ public class TagReadData {
 
     public TagData getTag() {
         return tagData;
+    }
+
+    public void setTIDMemData(byte[] tidMemData) {
+        this.tidMemData = tidMemData;
+    }
+
+    public byte[] getTidMemData() {
+        return tidMemData;
     }
 
     /**

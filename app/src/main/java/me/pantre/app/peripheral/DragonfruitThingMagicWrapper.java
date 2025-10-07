@@ -243,6 +243,7 @@ public class DragonfruitThingMagicWrapper {
         result.setReadCount(tagReadData.getReadCount());
         result.setData(tagReadData.getData());
         result.setTag(tagReadData.getTag());
+        result.setTIDMemData(tagReadData.getTIDMemData());
 
         return result;
     }
@@ -264,6 +265,18 @@ public class DragonfruitThingMagicWrapper {
         return hex.toString();
     }
 
+    public static String bytesToHexString(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
+    }
+
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, TagReadData tagReadData) throws Exception {
         // Read temperature code from the tag.
         String epc = tagReadData.getEpc();
@@ -272,8 +285,14 @@ public class DragonfruitThingMagicWrapper {
         System.out.println("SensorTagType(" + epc + ") = " + type);
         final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, hexStringToByteArray(epc));
 
-        short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 12);
+        short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 6);
+        int mdid = ((tidData[1] & 0x01) << 8) | (tidData[2] & 0xFF);
+        mdid = mdid >> 7;
         System.out.println("tidData = " + shortsToHexString(tidData));
+        System.out.println("tidData (mdid) = " + mdid);
+        String tmnKey = String.format("%02X-%02X%02X", mdid, tidData[2] & 0xFF, tidData[3] & 0xFF);
+        System.out.println("tidData (mdid) = " + tmnKey);
+        System.out.println("getTidMemData = " + bytesToHexString(tagReadData.getTidMemData()));
 
         byte[] userData = thingMagicReader.readTagMemBytes(
                 tagReadData.getTag(),
@@ -281,6 +300,7 @@ public class DragonfruitThingMagicWrapper {
                 0,  // Start address
                 2   // Number of bytes for temperature
         );
+        System.out.println("tempRaw = " + Arrays.toString(userData));
         int tempRaw = ((userData[0] & 0xFF) << 8) | (userData[1] & 0xFF);
         float t = parseTemperature(tempRaw);
         System.out.println("temperature (tid) = " + t);
