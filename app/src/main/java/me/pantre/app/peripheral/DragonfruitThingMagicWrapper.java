@@ -242,7 +242,7 @@ public class DragonfruitThingMagicWrapper {
         result.setPhase(tagReadData.getPhase());
         result.setReadCount(tagReadData.getReadCount());
         result.setData(tagReadData.getData());
-        result.setTag(tagReadData);
+        result.setTag(tagReadData.getTag());
         result.setTIDMemData(tagReadData.getTIDMemData());
 
         return result;
