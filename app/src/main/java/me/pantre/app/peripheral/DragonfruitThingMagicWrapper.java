@@ -54,7 +54,7 @@ public class DragonfruitThingMagicWrapper {
     private static final String ACTION_USB_PERMISSION = "com.thingmagic.rfidreader.services.USB_PERMISSION";
     private static final int READ_POWER = 3000; // 30 dBm
 
-    private Reader thingMagicReader;
+    public Reader thingMagicReader;
     private ReadPlan[] readPlanAntInd;
     private Integer readPower = -1;
     private SingleThreadPooledObject<TagReadData> tagReadDataPool;
