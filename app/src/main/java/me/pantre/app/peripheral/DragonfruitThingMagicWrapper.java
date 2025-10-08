@@ -283,7 +283,7 @@ public class DragonfruitThingMagicWrapper {
         String[] epcPrefixes = {"00000000", "00004716", "00004717"};
         SensorTagType type = detectTagType(epc);
         System.out.println("SensorTagType(" + epc + ") = " + type);
-        final TagFilter select = new Gen2.Select(false, Gen2.Bank.EPC, 32, epc.length() * 4, hexStringToByteArray(epc));
+        final TagFilter select = new Gen2.Select(false, Gen2.Bank.USER, 0xE0, 0, new byte[]{});
 
         short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 6);
         int mdid = ((tidData[1] & 0x01) << 8) | (tidData[2] & 0xFF);
@@ -294,18 +294,18 @@ public class DragonfruitThingMagicWrapper {
         System.out.println("tidData (mdid) = " + tmnKey);
         System.out.println("getTidMemData = " + bytesToHexString(tagReadData.getTidMemData()));
 
-        byte[] userData = thingMagicReader.readTagMemBytes(
-                tagReadData.getTag(),
-                Gen2.Bank.RESERVED.rep,
-                0x0E,  // Start address
-                2   // Number of bytes for temperature
-        );
-        System.out.println("tempRaw = " + Arrays.toString(userData));
-        int tempRaw = ((userData[0] & 0xFF) << 8) | (userData[1] & 0xFF);
-        float t = parseTemperature(tempRaw);
-        System.out.println("temperature (tid) = " + t);
+//        byte[] userData = thingMagicReader.readTagMemBytes(
+//                tagReadData.getTag(),
+//                Gen2.Bank.RESERVED.rep,
+//                0x0E,  // Start address
+//                2   // Number of bytes for temperature
+//        );
+//        System.out.println("tempRaw = " + Arrays.toString(userData));
+//        int tempRaw = ((userData[0] & 0xFF) << 8) | (userData[1] & 0xFF);
+//        float t = parseTemperature(tempRaw);
+//        System.out.println("temperature (tid) = " + t);
 
-        Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.TID, 0, (byte) 4), select);
+        Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.RESERVED, 0xE, (byte) 1), select);
         System.out.println("tidObject = " + shortsToHexString((short[]) tidObject));
 
         // Read temperature code (1 word)
