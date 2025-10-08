@@ -163,109 +163,109 @@ public class ThingMagicDriver {
         setupPreferences();
         //noinspection InfiniteLoopStatement
         while (true) {
-            Gen2.Select tempsensorEnable = Common.createGen2Select(4, 5, Gen2.Bank.USER, 0xE0, 0, new byte[]{});
-            Gen2.Select ocrssiMinFilter = Common.createGen2Select(4, 0, Gen2.Bank.USER, 0xD0, 8, new byte[]{(byte) (0x20 | (ocrssiMin - 1))});
-            Gen2.Select ocrssiMaxFilter = Common.createGen2Select(4, 2, Gen2.Bank.USER, 0xD0, 8, new byte[]{ocrssiMax});
-            MultiFilter selects = new MultiFilter(new Gen2.Select[]{tempsensorEnable, ocrssiMinFilter, ocrssiMaxFilter});
-            // parameters to read all three sensor codes at once
-            Gen2.ReadData operation = new Gen2.ReadData(Gen2.Bank.RESERVED, 0xC, (byte) 3);
-
-            // create configuration
-            SimpleReadPlan config = new SimpleReadPlan(Common.antennas, TagProtocol.GEN2, selects, operation, 1000);
-
-            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, config);
-            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);  // CW delay in microseconds
-            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_SESSION, Common.session);
-            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_Q, new Gen2.DynamicQ());
-
-            // attempt to read sensor tags
-            com.thingmagic.TagReadData[] results = thingMagicReaderWrapper.thingMagicReader.read(Common.readTime);
-
-            // optimize settings for reading an individual tag's memory
-            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 300);
-            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_SESSION, Gen2.Session.S0);
-            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_Q, new Gen2.StaticQ(0));
-
-            if (results.length == 0) {
-                System.out.println("No tag(s) found");
-            }
-            for (com.thingmagic.TagReadData tag : results) {
-                String epc = tag.epcString();
-                System.out.println("* EPC: " + epc);
-                short[] dataWords = Common.convertByteArrayToShortArray(tag.getData());
-                if (dataWords.length == 0) {
-                    continue;
-                }
-                int moistureCode = dataWords[0];
-                int ocrssiCode = dataWords[1];
-                int temperatureCode = dataWords[2];
-
-                // On-Chip RSSI Sensor
-                System.out.println("  - On-Chip RSSI: " + ocrssiCode);
-
-                // Moisture Sensor
-                String moistureStatus;
-                if (ocrssiCode < 5) {
-                    moistureStatus = "power too low";
-                } else if (ocrssiCode > 21) {
-                    moistureStatus = "power too high";
-                } else {
-                    moistureStatus = moistureCode + " at " + tag.getFrequency() + " kHz";
-                }
-                System.out.println("  - Moisture: " + moistureStatus);
-
-                // Temperature Sensor
-                String temperatureStatus;
-                if (ocrssiCode < 5) {
-                    temperatureStatus = "power too low";
-                } else if (ocrssiCode > 18) {
-                    temperatureStatus = "power too high";
-                } else if (temperatureCode < 1000 || 3500 < temperatureCode) {
-                    temperatureStatus = "bad read";
-                } else {
-                    try {
-                        // read, decode and apply calibration one tag at a time
-                        short[] calibrationWords = Common.readMemBlockByEpc(thingMagicReaderWrapper.thingMagicReader, tag, Gen2.Bank.USER, 8, 4);
-                        TemperatureCalibration cal = new TemperatureCalibration(calibrationWords);
-                        if (cal.valid) {
-                            double temperatureValue = cal.slope * temperatureCode + cal.offset;
-                            temperatureStatus = String.format("%.02f degC", temperatureValue);
-                        } else {
-                            temperatureStatus = "invalid calibration";
-                        }
-                    } catch (RuntimeException e) {
-                        temperatureStatus = "failed to read calibration";
-                    }
-                }
-                System.out.println("  - Temperature: " + temperatureStatus);
-            }
-            System.out.println();
-
-//            if (IS_LOGGING_ENABLED)
-//                Timber.i("inside startReading(). readingCycleNumber=%d", readingCycleNumber);
+//            Gen2.Select tempsensorEnable = Common.createGen2Select(4, 5, Gen2.Bank.USER, 0xE0, 0, new byte[]{});
+//            Gen2.Select ocrssiMinFilter = Common.createGen2Select(4, 0, Gen2.Bank.USER, 0xD0, 8, new byte[]{(byte) (0x20 | (ocrssiMin - 1))});
+//            Gen2.Select ocrssiMaxFilter = Common.createGen2Select(4, 2, Gen2.Bank.USER, 0xD0, 8, new byte[]{ocrssiMax});
+//            MultiFilter selects = new MultiFilter(new Gen2.Select[]{tempsensorEnable, ocrssiMinFilter, ocrssiMaxFilter});
+//            // parameters to read all three sensor codes at once
+//            Gen2.ReadData operation = new Gen2.ReadData(Gen2.Bank.RESERVED, 0xC, (byte) 3);
 //
-//            // Create new inventory map
-//            final Map<String, InventoryReadItem> invReadItemMapForCycle = new HashMap<>(inventoryReadMap);
+//            // create configuration
+//            SimpleReadPlan config = new SimpleReadPlan(Common.antennas, TagProtocol.GEN2, selects, operation, 1000);
 //
-//            try { // Catch all unpredictable exceptions
-//                for (int shelf = 1; shelf <= SHELVES_COUNT; shelf++) {
-//                    dragonFruitFacade.setShelf(shelf);
-//                    readPlans(shelf, readingCycleNumber + 1, invReadItemMapForCycle);
-//                }
-//            } catch (Throwable e) {
-//                Timber.e(e, "Exception during inventory cycle");
+//            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, config);
+//            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);  // CW delay in microseconds
+//            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_SESSION, Common.session);
+//            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_Q, new Gen2.DynamicQ());
+//
+//            // attempt to read sensor tags
+//            com.thingmagic.TagReadData[] results = thingMagicReaderWrapper.thingMagicReader.read(Common.readTime);
+//
+//            // optimize settings for reading an individual tag's memory
+//            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 300);
+//            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_SESSION, Gen2.Session.S0);
+//            thingMagicReaderWrapper.thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_Q, new Gen2.StaticQ(0));
+//
+//            if (results.length == 0) {
+//                System.out.println("No tag(s) found");
 //            }
+//            for (com.thingmagic.TagReadData tag : results) {
+//                String epc = tag.epcString();
+//                System.out.println("* EPC: " + epc);
+//                short[] dataWords = Common.convertByteArrayToShortArray(tag.getData());
+//                if (dataWords.length == 0) {
+//                    continue;
+//                }
+//                int moistureCode = dataWords[0];
+//                int ocrssiCode = dataWords[1];
+//                int temperatureCode = dataWords[2];
 //
-//            // Increment cycle number.
-//            readingCycleNumber++;
+//                // On-Chip RSSI Sensor
+//                System.out.println("  - On-Chip RSSI: " + ocrssiCode);
 //
-//            // Apply readings.
-//            inventoryReadMap.clear();
-//            inventoryReadMap.putAll(invReadItemMapForCycle);
+//                // Moisture Sensor
+//                String moistureStatus;
+//                if (ocrssiCode < 5) {
+//                    moistureStatus = "power too low";
+//                } else if (ocrssiCode > 21) {
+//                    moistureStatus = "power too high";
+//                } else {
+//                    moistureStatus = moistureCode + " at " + tag.getFrequency() + " kHz";
+//                }
+//                System.out.println("  - Moisture: " + moistureStatus);
 //
-//            // Read through all antennas is done, propagate events.
-//
-//            readTemperatureTags();
+//                // Temperature Sensor
+//                String temperatureStatus;
+//                if (ocrssiCode < 5) {
+//                    temperatureStatus = "power too low";
+//                } else if (ocrssiCode > 18) {
+//                    temperatureStatus = "power too high";
+//                } else if (temperatureCode < 1000 || 3500 < temperatureCode) {
+//                    temperatureStatus = "bad read";
+//                } else {
+//                    try {
+//                        // read, decode and apply calibration one tag at a time
+//                        short[] calibrationWords = Common.readMemBlockByEpc(thingMagicReaderWrapper.thingMagicReader, tag, Gen2.Bank.USER, 8, 4);
+//                        TemperatureCalibration cal = new TemperatureCalibration(calibrationWords);
+//                        if (cal.valid) {
+//                            double temperatureValue = cal.slope * temperatureCode + cal.offset;
+//                            temperatureStatus = String.format("%.02f degC", temperatureValue);
+//                        } else {
+//                            temperatureStatus = "invalid calibration";
+//                        }
+//                    } catch (RuntimeException e) {
+//                        temperatureStatus = "failed to read calibration";
+//                    }
+//                }
+//                System.out.println("  - Temperature: " + temperatureStatus);
+//            }
+//            System.out.println();
+
+            if (IS_LOGGING_ENABLED)
+                Timber.i("inside startReading(). readingCycleNumber=%d", readingCycleNumber);
+
+            // Create new inventory map
+            final Map<String, InventoryReadItem> invReadItemMapForCycle = new HashMap<>(inventoryReadMap);
+
+            try { // Catch all unpredictable exceptions
+                for (int shelf = 1; shelf <= SHELVES_COUNT; shelf++) {
+                    dragonFruitFacade.setShelf(shelf);
+                    readPlans(shelf, readingCycleNumber + 1, invReadItemMapForCycle);
+                }
+            } catch (Throwable e) {
+                Timber.e(e, "Exception during inventory cycle");
+            }
+
+            // Increment cycle number.
+            readingCycleNumber++;
+
+            // Apply readings.
+            inventoryReadMap.clear();
+            inventoryReadMap.putAll(invReadItemMapForCycle);
+
+            // Read through all antennas is done, propagate events.
+
+            readTemperatureTags();
         }
     }
 

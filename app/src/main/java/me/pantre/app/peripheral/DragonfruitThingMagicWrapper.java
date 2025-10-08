@@ -36,7 +36,7 @@ import timber.log.Timber;
 
 public class DragonfruitThingMagicWrapper {
     int TEMPERATURE_SENSOR_BIT_POINTER = 0xE0;
-    int TEMPERATURE_CODE_WORD_ADDRESS = 0xE;
+    int TEMPERATURE_CODE_WORD_ADDRESS = 0xC;
     int TEMPERATURE_CALIBRATION_WORD_ADDRESS = 0x8;
     byte TEMPERATURE_CALIBRATION_DATA_LENGTH = 4;
     int TEMPERATURE_WEIGHT = 3000;
@@ -280,11 +280,14 @@ public class DragonfruitThingMagicWrapper {
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, TagReadData tagReadData) throws Exception {
 
         final Gen2.Select gen2Select = new Gen2.Select(false, Gen2.Bank.USER, TEMPERATURE_SENSOR_BIT_POINTER, 0, new byte[]{});
+        gen2Select.target = Gen2.Select.Target.Select;
+        gen2Select.action = Gen2.Select.Action.OFF_N_NOP;
         final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
 
         // Keep weight high to make power cycle longer.
-        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, TEMPERATURE_WEIGHT, true);
+        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, 1000);
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);
         TagReadData[] result = read(readDuration);
         System.out.println("result = " + Arrays.toString(result));
 
