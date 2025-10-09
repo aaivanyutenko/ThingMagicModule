@@ -279,33 +279,33 @@ public class DragonfruitThingMagicWrapper {
 
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, TagReadData tagReadData) throws Exception {
 
-        final Gen2.Select gen2Select = new Gen2.Select(false, Gen2.Bank.USER, TEMPERATURE_SENSOR_BIT_POINTER, 0, new byte[]{});
-        gen2Select.target = Gen2.Select.Target.Select;
-        gen2Select.action = Gen2.Select.Action.OFF_N_NOP;
-        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
-
-        // Keep weight high to make power cycle longer.
-        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, 1000);
-        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
-        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);
-        TagReadData[] result = read(readDuration);
-        System.out.println("result = " + Arrays.toString(result));
-
-        // Read temperature code from the tag.
-        String epc = tagReadData.getEpc();
-        String[] epcPrefixes = {"00000000", "00004716", "00004717"};
-        SensorTagType type = detectTagType(epc);
-        System.out.println("SensorTagType(" + epc + ") = " + type);
-        final TagFilter select = new Gen2.Select(false, Gen2.Bank.USER, 0xE0, 0, new byte[]{});
-
-        short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 6);
-        int mdid = ((tidData[1] & 0x01) << 8) | (tidData[2] & 0xFF);
-        mdid = mdid >> 7;
-        System.out.println("tidData = " + shortsToHexString(tidData));
-        System.out.println("tidData (mdid) = " + mdid);
-        String tmnKey = String.format("%02X-%02X%02X", mdid, tidData[2] & 0xFF, tidData[3] & 0xFF);
-        System.out.println("tidData (mdid) = " + tmnKey);
-        System.out.println("getTidMemData = " + bytesToHexString(tagReadData.getTidMemData()));
+//        final Gen2.Select gen2Select = new Gen2.Select(false, Gen2.Bank.USER, TEMPERATURE_SENSOR_BIT_POINTER, 0, new byte[]{});
+//        gen2Select.target = Gen2.Select.Target.Select;
+//        gen2Select.action = Gen2.Select.Action.OFF_N_NOP;
+//        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
+//
+//        // Keep weight high to make power cycle longer.
+//        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, 1000);
+//        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
+//        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);
+//        TagReadData[] result = read(readDuration);
+//        System.out.println("result = " + Arrays.toString(result));
+//
+//        // Read temperature code from the tag.
+//        String epc = tagReadData.getEpc();
+//        String[] epcPrefixes = {"00000000", "00004716", "00004717"};
+//        SensorTagType type = detectTagType(epc);
+//        System.out.println("SensorTagType(" + epc + ") = " + type);
+//        final TagFilter select = new Gen2.Select(false, Gen2.Bank.USER, 0xE0, 0, new byte[]{});
+//
+//        short[] tidData = thingMagicReader.readTagMemWords(tagReadData.getTag(), Gen2.Bank.TID.rep, 0, 6);
+//        int mdid = ((tidData[1] & 0x01) << 8) | (tidData[2] & 0xFF);
+//        mdid = mdid >> 7;
+//        System.out.println("tidData = " + shortsToHexString(tidData));
+//        System.out.println("tidData (mdid) = " + mdid);
+//        String tmnKey = String.format("%02X-%02X%02X", mdid, tidData[2] & 0xFF, tidData[3] & 0xFF);
+//        System.out.println("tidData (mdid) = " + tmnKey);
+//        System.out.println("getTidMemData = " + bytesToHexString(tagReadData.getTidMemData()));
 
 //        byte[] userData = thingMagicReader.readTagMemBytes(
 //                tagReadData.getTag(),
@@ -318,19 +318,29 @@ public class DragonfruitThingMagicWrapper {
 //        float t = parseTemperature(tempRaw);
 //        System.out.println("temperature (tid) = " + t);
 
-        Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.RESERVED, 0xE, (byte) 1), select);
-        System.out.println("tidObject = " + shortsToHexString((short[]) tidObject));
+        Gen2.ReadData readOp = new Gen2.ReadData(
+                Gen2.Bank.USER,    // Memory bank
+                0x0E,              // Starting word address for temperature
+                (byte) 1           // Number of words to read (1 word = 2 bytes)
+        );
+        Gen2.TagData targetTag = new Gen2.TagData(tagReadData.getEpc());
+        TagFilter filter = new Gen2.Select(false, Gen2.Bank.EPC, 32, tagReadData.getEpc().length() * 4, targetTag.epcBytes());
+        Object response = thingMagicReader.executeTagOp(readOp, filter);
+        System.out.println("response = " + shortsToHexString((short[]) response));
 
-        // Read temperature code (1 word)
-        Object tempCodeBytes = thingMagicReader.executeTagOp(
-                new Gen2.ReadData(Gen2.Bank.EPC, 2, (byte) 8), select);
-        if (tempCodeBytes instanceof short[]) {
-            System.out.println("tempCodeBytes = " + Arrays.toString((short[]) tempCodeBytes));
-            MagnusTemperature temperature = parseMagnusS3Data((short[]) tempCodeBytes, epc);
-            System.out.println("parseMagnusS3Data: temperature = " + temperature);
-        } else {
-            System.out.println("tempCodeBytes = " + tempCodeBytes);
-        }
+//        Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.RESERVED, 0xE, (byte) 1), select);
+//        System.out.println("tidObject = " + shortsToHexString((short[]) tidObject));
+//
+//        // Read temperature code (1 word)
+//        Object tempCodeBytes = thingMagicReader.executeTagOp(
+//                new Gen2.ReadData(Gen2.Bank.EPC, 2, (byte) 8), select);
+//        if (tempCodeBytes instanceof short[]) {
+//            System.out.println("tempCodeBytes = " + Arrays.toString((short[]) tempCodeBytes));
+//            MagnusTemperature temperature = parseMagnusS3Data((short[]) tempCodeBytes, epc);
+//            System.out.println("parseMagnusS3Data: temperature = " + temperature);
+//        } else {
+//            System.out.println("tempCodeBytes = " + tempCodeBytes);
+//        }
 
         // Read calibration block (4 words)
 //        short[] calibrationBytes = (short[]) thingMagicReader.executeTagOp(
