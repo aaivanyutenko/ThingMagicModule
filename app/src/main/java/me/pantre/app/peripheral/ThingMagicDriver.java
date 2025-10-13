@@ -23,10 +23,24 @@ import me.pantre.app.model.RfidBand;
 import me.pantre.app.peripheral.model.TagReadData;
 import me.pantre.app.peripheral.model.TagReadDataCache;
 import me.pantre.app.peripheral.model.TagTemperatureReadData;
-import timber.log.Timber;
 
 /**
  * ThingMagic driver read data from antennas.
+ * 0614c1d4dd4dad69	device
+ * 061dc1d4dd4dad69	device
+ * 121809d4d5acffc8	device
+ * 1e0e11d4da2da0b0	device
+ * adb -s 121809d4d5acffc8 uninstall me.pantre.app
+ * adb -s 1e0e11d4da2da0b0 shell am force-stop me.pantre.app
+ * adb -s 121809d4d5acffc8 shell am force-stop me.pantre.app
+ * adb -s 121809d4d5acffc8 shell am force-stop com.pantrylabs.watchdog
+ * adb -s 121809d4d5acffc8 shell dpm remove-active-admin com.pantrylabs.watchdog/android.app.admin.DeviceAdminReceiver
+ * adb -s 121809d4d5acffc8 root
+ * tempCodeBytes = [-9582, -29416]
+ * init
+ * uid=1000(system) pool-1-thread-1 identical 1 line
+ * init
+ * calibrationBytes = [0, 0, 0, 0]
  */
 public class ThingMagicDriver {
 
@@ -104,7 +118,7 @@ public class ThingMagicDriver {
 
     public ThingMagicDriver(DragonFruitFacade dragonFruitFacade, final DragonfruitThingMagicWrapper thingMagicReaderWrapper,
                             final boolean shouldSleepAfterReading, final int chipAntennasCount, final int realAntennasCount) {
-        Timber.i("ThingMagicDriver started. Antennas: %d-%d", chipAntennasCount, realAntennasCount);
+        System.out.printf("ThingMagicDriver started. Antennas: %d-%d", chipAntennasCount, realAntennasCount);
         this.dragonFruitFacade = dragonFruitFacade;
         this.thingMagicReaderWrapper = thingMagicReaderWrapper;
 
@@ -126,12 +140,12 @@ public class ThingMagicDriver {
             boolean isOldThingMagicModule = thingMagicReaderWrapper.initializeUsbDevice(context);
             if (thingMagicReaderWrapper.deviceHasPermission) {
                 thingMagicReaderWrapper.createReader();
-                Timber.i("Trying to connect ThingMagic");
+                System.out.printf("Trying to connect ThingMagic");
                 thingMagicReaderWrapper.connect(LICENSE_KEY, RfidBand.US902, isOldThingMagicModule);
             }
 
             if (thingMagicReaderWrapper.isConnected()) {
-                Timber.i("Already connected to ThingMagic");
+                System.out.printf("Already connected to ThingMagic");
 
                 // Show a toast.
                 final Handler h = new Handler(context.getMainLooper());
@@ -140,12 +154,12 @@ public class ThingMagicDriver {
                 startReading();
             } else {
                 // Connection failed. Giving up.
-                Timber.w("TM connection failed. Giving up.");
+                System.out.println("TM connection failed. Giving up.");
                 connectionFailed = true;
             }
 
         } catch (Exception e) {
-            Timber.e(e, "TM connection caught exception. Giving up. (%s)", e.getMessage());
+            e.printStackTrace();
             connectionFailed = true;
         }
 
@@ -159,7 +173,7 @@ public class ThingMagicDriver {
     static byte ocrssiMax = 31;
 
     private void startReading() throws ReaderException {
-        Timber.d("Started reading");
+        System.out.println("Started reading");
         setupPreferences();
         //noinspection InfiniteLoopStatement
         while (true) {
@@ -242,7 +256,7 @@ public class ThingMagicDriver {
 //            System.out.println();
 
             if (IS_LOGGING_ENABLED)
-                Timber.i("inside startReading(). readingCycleNumber=%d", readingCycleNumber);
+                System.out.printf("inside startReading(). readingCycleNumber=%d", readingCycleNumber);
 
             // Create new inventory map
             final Map<String, InventoryReadItem> invReadItemMapForCycle = new HashMap<>(inventoryReadMap);
@@ -253,7 +267,7 @@ public class ThingMagicDriver {
                     readPlans(shelf, readingCycleNumber + 1, invReadItemMapForCycle);
                 }
             } catch (Throwable e) {
-                Timber.e(e, "Exception during inventory cycle");
+                e.printStackTrace();
             }
 
             // Increment cycle number.
@@ -278,27 +292,26 @@ public class ThingMagicDriver {
             thingMagicReaderWrapper.paramSetSession("S0");
             thingMagicReaderWrapper.paramSetTarget("A");
         } catch (Exception e) {
-            Timber.d("setupPreferences error:");
-            Timber.e(e);
+            System.out.println("setupPreferences error:");
         }
     }
 
     private void readTemperatureTags() {
         if (IS_LOGGING_ENABLED)
-            Timber.d("Read flag is set. Initialize reading tag temperature flow.");
+            System.out.println("Read flag is set. Initialize reading tag temperature flow.");
 
         List<TagReadData> temperatureTagsData = tagReadCache.getTemperatureTags();
 
         if (temperatureTagsData.isEmpty()) {
             if (IS_LOGGING_ENABLED)
-                Timber.d("Cannot find any temperature tags in tagReadCache. Nothing to do.");
+                System.out.println("Cannot find any temperature tags in tagReadCache. Nothing to do.");
             return;
         }
 
         try { // Catch all unpredictable exceptions
             for (final TagReadData temperatureTagData : temperatureTagsData) {
                 if (IS_LOGGING_ENABLED)
-                    Timber.v("Read tag temperature[ antenna: %d multiplier: %d rssi %d ]", temperatureTagData.getAntenna(), temperatureTagData.getAntennaMultiplier(), temperatureTagData.getRssi());
+                    System.out.printf("Read tag temperature[ antenna: %d multiplier: %d rssi %d ]", temperatureTagData.getAntenna(), temperatureTagData.getAntennaMultiplier(), temperatureTagData.getRssi());
                 final List<Integer> shelvesList = List.of(temperatureTagData.getAntennaMultiplier());
                 for (int shelf = 1; shelf <= SHELVES_COUNT; shelf++) {
                     if (shelvesList.contains(shelf)) {
@@ -308,7 +321,7 @@ public class ThingMagicDriver {
                 }
             }
         } catch (Throwable e) {
-            Timber.e(e, "Exception during temperature reading");
+            e.printStackTrace();
         }
     }
 
@@ -333,7 +346,7 @@ public class ThingMagicDriver {
         try {
             tagTemperatureReadData = readTagTemperature(tagReadData, antenna, readDurationInd);
         } catch (Exception e) {
-            Timber.e(e, "ThingMagic temperature read exception");
+            e.printStackTrace();
         }
 
         if (tagTemperatureReadData != null && tagTemperatureReadData.getTemperature() != 0) {
@@ -346,7 +359,7 @@ public class ThingMagicDriver {
      * IMPORTANT: We have a pool of read data object and handle them manually.
      */
     private TagTemperatureReadData readTagTemperature(final TagReadData tagReadData, final int antenna, final long readDuration) throws Exception {
-        Timber.d("readTagTemperature() called with: epc = [" + tagReadData.getEpc() + "], antenna = [" + antenna + "], readDuration = [" + readDuration + "]");
+        System.out.println("readTagTemperature() called with: epc = [" + tagReadData.getEpc() + "], antenna = [" + antenna + "], readDuration = [" + readDuration + "]");
         final TagReadData[] tagReads = thingMagicReaderWrapper.readTemperatureCode(antenna, readDuration, tagReadData);
 
 
@@ -359,13 +372,13 @@ public class ThingMagicDriver {
         }
 
         if (temperatureCodeData == null) {
-            if (IS_LOGGING_ENABLED) Timber.w("Can't read temperature tag.");
+            if (IS_LOGGING_ENABLED) System.out.println("Can't read temperature tag.");
             return null;
         }
 
         final TagTemperatureReadData calibrationReadData = readCalibrationTagTemperature(tagReadData.getEpc(), antenna, readDuration);
         if (calibrationReadData == null) {
-            if (IS_LOGGING_ENABLED) Timber.w("Can't read calibration data.");
+            if (IS_LOGGING_ENABLED) System.out.println("Can't read calibration data.");
 
             return null;
         }
@@ -386,7 +399,7 @@ public class ThingMagicDriver {
      */
     private TagTemperatureReadData readCalibrationTagTemperature(final String epc, final int antenna, final long readDuration) throws Exception {
         if (!calibrationMap.containsKey(epc)) {
-            if (IS_LOGGING_ENABLED) Timber.v("Read calibration data for epc %s", epc);
+            if (IS_LOGGING_ENABLED) System.out.printf("Read calibration data for epc %s", epc);
 
             final TagReadData[] tagReads = thingMagicReaderWrapper.readTemperatureCalibration(epc, antenna, readDuration);
 
@@ -416,7 +429,7 @@ public class ThingMagicDriver {
             final TagReadData[] tagReads = thingMagicReaderWrapper.read(readOnMs);
             dragonFruitFacade.mainActivity.onTagReads(tagReads);
             if (IS_LOGGING_ENABLED)
-                Timber.d("Done with read - shelf number: %d, num of tags read: %d, read time: %d", antennaMultiplier, tagReads.length, System.currentTimeMillis() - timeBeforeRead);
+                System.out.printf("Done with read - shelf number: %d, num of tags read: %d, read time: %d", antennaMultiplier, tagReads.length, System.currentTimeMillis() - timeBeforeRead);
 
             int minRssi = -10;
             String epc;
@@ -433,7 +446,7 @@ public class ThingMagicDriver {
                 tagReadData.setAntennaMultiplier(antennaMultiplier);
 
                 if (epc.length() != EPC_VALID_LENGTH) { // Discard EPC that is not of length 24
-                    Timber.w("EPC ignored: %s", epc);
+                    System.out.printf("EPC ignored: %s", epc);
                 } else {
 
                     final InventoryReadItem existingItem = inventoryReadMap.get(epc);
@@ -464,7 +477,7 @@ public class ThingMagicDriver {
                     tagReadCache.add(tagReadData);
 //                    if (BuildConfig.DEBUG) {
                     if (IS_LOGGING_ENABLED)
-                        Timber.v("Found a tag temperature[ antenna: %d multiplier: %d rssi %d ]", tagReadData.getAntenna(), antennaMultiplier, tagReadData.getRssi());
+                        System.out.printf("Found a tag temperature[ antenna: %d multiplier: %d rssi %d ]", tagReadData.getAntenna(), antennaMultiplier, tagReadData.getRssi());
 //                    }
                 } else {
                     // To simplify GC work return object back to the pool
@@ -472,9 +485,9 @@ public class ThingMagicDriver {
                 }
             }
 
-            if (IS_LOGGING_ENABLED) Timber.v("Min RSSI of the tags read above: %d", minRssi);
+            if (IS_LOGGING_ENABLED) System.out.printf("Min RSSI of the tags read above: %d", minRssi);
         } catch (Exception e) {
-            Timber.e(e, "ThingMagic read exception. Antenna multiplier %d", antennaMultiplier);
+            e.printStackTrace();
         }
     }
 
@@ -487,7 +500,7 @@ public class ThingMagicDriver {
 
         thingMagicReaderWrapper.setReadPower(thingMagicReaderWrapper.getMaxReadPower());
 
-        Timber.i("TM durations were changed: antennaSleep=%d, readDurationInd=%d", antennaSleep, readDurationInd);
+        System.out.printf("TM durations were changed: antennaSleep=%d, readDurationInd=%d", antennaSleep, readDurationInd);
     }
 
     /**

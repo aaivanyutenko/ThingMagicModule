@@ -31,7 +31,6 @@ import java.util.List;
 
 import me.pantre.app.model.RfidBand;
 import me.pantre.app.peripheral.model.TagReadData;
-import timber.log.Timber;
 
 
 public class DragonfruitThingMagicWrapper {
@@ -94,16 +93,15 @@ public class DragonfruitThingMagicWrapper {
                     boolean isFtDevice = ftD2xx.isFtDevice(device);
                     boolean hasPermission = manager.hasPermission(device);
                     int getInterfaceCount = device.getInterfaceCount();
-                    Timber.d("isFtDevice = %s", isFtDevice);
-                    Timber.d("hasPermission = %s", hasPermission);
-                    Timber.d("getInterfaceCount = %s", getInterfaceCount);
+                    System.out.printf("isFtDevice = %s%n", isFtDevice);
+                    System.out.printf("hasPermission = %s", hasPermission);
+                    System.out.printf("getInterfaceCount = %s", getInterfaceCount);
                     int addUsbDevice = ftD2xx.addUsbDevice(device);
-                    Timber.d("addUsbDevice = %s", addUsbDevice);
+                    System.out.printf("addUsbDevice = %s", addUsbDevice);
                     FT_Device ftdev = ftD2xx.openByUsbDevice(context, device);
-                    Timber.d("ftdev = %s", ftdev);
+                    System.out.printf("ftdev = %s", ftdev);
                     new AndroidUsbReflection(manager, ftdev, device, device.getDeviceClass());
                 } catch (D2xxManager.D2xxException e) {
-                    Timber.e(e);
                     new AndroidUsbReflection(manager, null, device, device.getDeviceClass());
                 }
                 return false;
@@ -133,7 +131,7 @@ public class DragonfruitThingMagicWrapper {
                 setupReaderParameters(licenseKey, rfidBand, isOldThingMagicModule);
             }
         } catch (Exception e) {
-            Timber.e(e, "Error connecting to ThingMagic reader");
+            e.printStackTrace();
         }
     }
 
@@ -160,13 +158,13 @@ public class DragonfruitThingMagicWrapper {
     }
 
     private void logReaderInfo() throws Exception {
-        Timber.d("Region: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_REGION_ID));
-        Timber.d("Hardware: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_HARDWARE));
-        Timber.d("Serial: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_SERIAL));
-        Timber.d("Model: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_MODEL));
-        Timber.d("Software: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_SOFTWARE));
-        Timber.d("Command timeout: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_COMMANDTIMEOUT));
-        Timber.d("Transport timeout: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT));
+        System.out.printf("Region: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_REGION_ID));
+        System.out.printf("Hardware: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_HARDWARE));
+        System.out.printf("Serial: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_SERIAL));
+        System.out.printf("Model: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_MODEL));
+        System.out.printf("Software: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_SOFTWARE));
+        System.out.printf("Command timeout: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_COMMANDTIMEOUT));
+        System.out.printf("Transport timeout: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT));
     }
 
     private void setupReaderDefaults() throws Exception {
@@ -215,7 +213,7 @@ public class DragonfruitThingMagicWrapper {
         if (readPlanAntInd != null && readPlanIndex < readPlanAntInd.length) {
             thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlanAntInd[readPlanIndex]);
             if (IS_LOGGING_ENABLED)
-                Timber.v("Read plan is %s", readPlanAntInd[readPlanIndex].toString());
+                System.out.printf("Read plan is %s", readPlanAntInd[readPlanIndex].toString());
         }
     }
 
@@ -394,7 +392,7 @@ public class DragonfruitThingMagicWrapper {
      */
     private MagnusTemperature parseMagnusS3Data(short[] data, String originalEpc) {
         if (data.length < 6) {
-            Timber.d("Insufficient data received: " + data.length + " words");
+            System.out.println("Insufficient data received: " + data.length + " words");
             return null;
         }
 
@@ -414,7 +412,7 @@ public class DragonfruitThingMagicWrapper {
      */
     private MagnusTemperature parseTemperatureFromEPC(String epc, int rssi) {
         if (epc == null || epc.length() < 24) {
-            Timber.d("EPC too short: %s", epc);
+            System.out.printf("EPC too short: %s", epc);
             return null;
         }
 
@@ -445,11 +443,11 @@ public class DragonfruitThingMagicWrapper {
                             System.currentTimeMillis()
                     );
                 } else {
-                    Timber.d("Temperature out of range: " + temperature);
+                    System.out.println("Temperature out of range: " + temperature);
                 }
             }
         } catch (Exception e) {
-            Timber.e(e, "Error parsing EPC: " + epc);
+            e.printStackTrace();
         }
 
         return null;
@@ -475,7 +473,7 @@ public class DragonfruitThingMagicWrapper {
         double temp3 = (tempCode / 10.0) - 273.15;
 
         // Use Method 1 (most common), but log others for debugging
-        Timber.d("Temp conversions - M1: %.2f, M2: %.2f, M3: %.2f", temp1, temp2, temp3);
+        System.out.printf("Temp conversions - M1: %.2f, M2: %.2f, M3: %.2f", temp1, temp2, temp3);
 
         // Return the most reasonable value
         if (temp1 >= -40 && temp1 <= 85) return temp1;
@@ -505,7 +503,7 @@ public class DragonfruitThingMagicWrapper {
             // Try SL900A signature read
             Gen2.ReadData readOp = new Gen2.ReadData(Gen2.Bank.USER, 0x00, (byte) 2);
             thingMagicReader.executeTagOp(readOp, filter);
-            Timber.d("Detected as SL900A or compatible");
+            System.out.println("Detected as SL900A or compatible");
             return SensorTagType.SL900A;
         } catch (Exception e) {
             // Not SL900A, try others
@@ -515,7 +513,7 @@ public class DragonfruitThingMagicWrapper {
             // Try RESERVED bank (Axzon tags)
             Gen2.ReadData readOp = new Gen2.ReadData(Gen2.Bank.RESERVED, 0x0A, (byte) 1);
             thingMagicReader.executeTagOp(readOp, filter);
-            Timber.d("Detected as Axzon or compatible");
+            System.out.println("Detected as Axzon or compatible");
             return SensorTagType.AXZON;
         } catch (Exception e) {
             // Not Axzon
@@ -551,9 +549,9 @@ public class DragonfruitThingMagicWrapper {
             readPower = power;
             thingMagicReader.paramSet(TMConstants.TMR_PARAM_RADIO_READPOWER, READ_POWER);
 
-            Timber.i("TM power was changed: %d", readPower);
+            System.out.printf("TM power was changed: %d", readPower);
         } catch (ReaderException e) {
-            Timber.e(e);
+            e.printStackTrace();
         }
     }
 }

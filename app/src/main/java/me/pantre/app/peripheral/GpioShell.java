@@ -4,9 +4,6 @@ import android.annotation.SuppressLint;
 
 import com.jaredrummler.ktsh.Shell;
 
-import timber.log.Timber;
-
-
 public class GpioShell {
     public GpioShell() {
         shellRun("su");
@@ -16,7 +13,7 @@ public class GpioShell {
         try {
             shell.run(command);
         } catch (Shell.ClosedException e) {
-            Timber.e(e);
+            e.printStackTrace();
         }
     }
 

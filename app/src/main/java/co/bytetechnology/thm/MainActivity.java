@@ -7,7 +7,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import co.bytetechnology.thm.databinding.ActivityMainBinding;
 import me.pantre.app.bean.peripheral.DragonFruitFacade;
 import me.pantre.app.peripheral.model.TagReadData;
-import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
@@ -17,14 +16,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        Timber.plant(new Timber.DebugTree());
         DragonFruitFacade dragonFruitFacade = new DragonFruitFacade(this);
         dragonFruitFacade.initPeripherals();
     }
 
     public void onTagReads(TagReadData[] tagReads) {
         for (TagReadData tagData : tagReads) {
-            Timber.d("TagReadData: epc = %s, rssi = %s", tagData.getEpc(), tagData.getRssi());
+            System.out.printf("TagReadData: epc = %s, rssi = %s", tagData.getEpc(), tagData.getRssi());
         }
     }
 }

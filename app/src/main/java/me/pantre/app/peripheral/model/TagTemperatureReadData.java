@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import me.pantre.app.util.PantryUtils;
-import timber.log.Timber;
 
 public class TagTemperatureReadData extends TagReadData {
     private static final boolean IS_LOGGING_ENABLED = true;
@@ -66,15 +65,15 @@ public class TagTemperatureReadData extends TagReadData {
      */
     public boolean setCalibrationDataWithCRC(final byte[] data) {
         if (IS_LOGGING_ENABLED)
-            Timber.v("Calibration raw data with CRC: %s", Arrays.toString(data));
+            System.out.printf("Calibration raw data with CRC: %s", Arrays.toString(data));
 
         if (checkCalibrationDataWithCRC(data)) {
             final byte[] crcData = Arrays.copyOfRange(data, 0, CRC_DATA_SIZE);
-            if (IS_LOGGING_ENABLED) Timber.v("CRC raw data: %s", Arrays.toString(crcData));
+            if (IS_LOGGING_ENABLED) System.out.printf("CRC raw data: %s", Arrays.toString(crcData));
 
 
             final byte[] calibrationData = Arrays.copyOfRange(data, CRC_DATA_SIZE, CALIBRATION_DATA_WITH_CRC_SIZE);
-            if (IS_LOGGING_ENABLED) Timber.v("CRC calibration data: %s", Arrays.toString(crcData));
+            if (IS_LOGGING_ENABLED) System.out.printf("CRC calibration data: %s", Arrays.toString(crcData));
 
 
             // Reverse calibration data to calculate CRC value.
@@ -88,14 +87,14 @@ public class TagTemperatureReadData extends TagReadData {
             final long crcValue = PantryUtils.byteArrayToLong(crcData);
             final int calcCrcValue = PantryUtils.crc16(reversedCalibrationData);
             if (IS_LOGGING_ENABLED)
-                Timber.v("CRC value: %d, calc CRC value: %d", crcValue, calcCrcValue);
+                System.out.printf("CRC value: %d, calc CRC value: %d", crcValue, calcCrcValue);
 
 
             if (crcValue == calcCrcValue) {
                 return setCalibrationData(calibrationData);
             } else {
                 if (IS_LOGGING_ENABLED)
-                    Timber.w("CRC check failed. CRC value: %d, calc CRC value: %d", crcValue, calcCrcValue);
+                    System.out.printf("CRC check failed. CRC value: %d, calc CRC value: %d", crcValue, calcCrcValue);
             }
         }
 
@@ -109,7 +108,7 @@ public class TagTemperatureReadData extends TagReadData {
      * data contains values of 3 words 9h, Ah, and Bh.
      */
     public boolean setCalibrationData(final byte[] data) {
-        if (IS_LOGGING_ENABLED) Timber.v("Calibration raw data: %s", Arrays.toString(data));
+        if (IS_LOGGING_ENABLED) System.out.printf("Calibration raw data: %s", Arrays.toString(data));
 
         if (checkCalibrationData(data)) {
             final long value = PantryUtils.byteArrayToLong(data);
@@ -127,7 +126,7 @@ public class TagTemperatureReadData extends TagReadData {
 
 
             if (IS_LOGGING_ENABLED)
-                Timber.d("Calibration data: code1=%d, temp1=%d, code2=%d, temp2=%d", code1, temp1, code2, temp2);
+                System.out.printf("Calibration data: code1=%d, temp1=%d, code2=%d, temp2=%d", code1, temp1, code2, temp2);
             return true;
         }
 
@@ -138,7 +137,7 @@ public class TagTemperatureReadData extends TagReadData {
      * Set temperature code as bytes array.
      */
     public boolean setTemperatureCodeData(final byte[] data) {
-        if (IS_LOGGING_ENABLED) Timber.v("Temperature code raw data: %s", Arrays.toString(data));
+        if (IS_LOGGING_ENABLED) System.out.printf("Temperature code raw data: %s", Arrays.toString(data));
         if (checkTemperatureCodeData(data)) {
             final ByteBuffer wrapped = ByteBuffer.wrap(data);
 
@@ -146,7 +145,7 @@ public class TagTemperatureReadData extends TagReadData {
             final int mask = 0x0FFF;
             temperatureCode = wrapped.getShort() & mask;
 
-            if (IS_LOGGING_ENABLED) Timber.d("Temperature code is %d", temperatureCode);
+            if (IS_LOGGING_ENABLED) System.out.printf("Temperature code is %d", temperatureCode);
 
             return true;
         }

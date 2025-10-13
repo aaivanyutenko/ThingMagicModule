@@ -50,7 +50,6 @@ dependencies {
     implementation libs.constraintlayout
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
-    implementation libs.timber
     implementation libs.gson
     implementation libs.ktsh
     implementation files('libs/d2xx.jar')

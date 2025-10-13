@@ -10,7 +10,6 @@ import me.pantre.app.peripheral.DragonfruitThingMagicWrapper;
 import me.pantre.app.peripheral.GpioContstants;
 import me.pantre.app.peripheral.GpioShell;
 import me.pantre.app.peripheral.ThingMagicDriver;
-import timber.log.Timber;
 
 public class DragonFruitFacade {
 
@@ -46,7 +45,7 @@ public class DragonFruitFacade {
             // Guard against re-entry
             return;
         }
-        Timber.i("%s initPeripherals() called.", KIT_NAME);
+        System.out.printf("%s initPeripherals() called.", KIT_NAME);
         initPeripheralsInvoked = true;
 
         // Initialize thing magic driver.
@@ -59,11 +58,11 @@ public class DragonFruitFacade {
         // Initialize ThingMagic.
         final ScheduledExecutorService thingMagicConnectionScheduler = Executors.newSingleThreadScheduledExecutor();
         thingMagicConnectTask = thingMagicConnectionScheduler.scheduleWithFixedDelay(() -> {
-            Timber.i("Connecting ThingMagic. Attempt #%d", ++thingMagicConnectionRetryCounter);
+            System.out.printf("Connecting ThingMagic. Attempt #%d", ++thingMagicConnectionRetryCounter);
 
             thingMagicDriver.connect(mainActivity);
 
-            Timber.d("ThingMagic isConnected? %s", String.valueOf(thingMagicDriver.isConnected()));
+            System.out.printf("ThingMagic isConnected? %s", thingMagicDriver.isConnected());
 
             if (thingMagicDriver.isConnected()) {
                 thingMagicConnectTask.cancel(true);
@@ -75,7 +74,7 @@ public class DragonFruitFacade {
      * Choose a shelf using muxs.
      */
     public void setShelf(final int shelf) {
-        if (IS_LOGGING_ENABLED) Timber.v("Set shelf to %d", shelf);
+        if (IS_LOGGING_ENABLED) System.out.printf("Set shelf to %d", shelf);
 
         switch (shelf) {
             case 1:
