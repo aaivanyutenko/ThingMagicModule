@@ -25,6 +25,7 @@ import com.thingmagic.TagOp;
 import com.thingmagic.TagProtocol;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -298,7 +299,7 @@ public class DragonfruitThingMagicWrapper {
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
 //        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);
         TagReadData[] result = read(readDuration);
-//        System.out.println("result = " + Arrays.toString(result));
+        System.out.println("readTemperatureCode result = " + Arrays.toString(result));
 //
 //        // Read temperature code from the tag.
 //        String epc = tagReadData.getEpc();

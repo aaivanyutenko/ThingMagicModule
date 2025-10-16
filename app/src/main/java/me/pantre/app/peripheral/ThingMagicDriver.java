@@ -360,13 +360,14 @@ public class ThingMagicDriver {
      */
     private TagTemperatureReadData readTagTemperature(final TagReadData tagReadData, final int antenna, final long readDuration) throws Exception {
         System.out.println("readTagTemperature() called with: epc = [" + tagReadData.getEpc() + "], antenna = [" + antenna + "], readDuration = [" + readDuration + "]");
+        String epc = tagReadData.getEpc();
         final TagReadData[] tagReads = thingMagicReaderWrapper.readTemperatureCode(antenna, readDuration, tagReadData);
 
 
         byte[] temperatureCodeData = null;
         for (final TagReadData trd : tagReads) {
-            if (tagReadData.isTemperatureTag() && trd.getEpc().equals(tagReadData.getEpc())) {
-                temperatureCodeData = tagReadData.getData();
+            if (tagReadData.isTemperatureTag() && trd.getEpc().equals(epc)) {
+                temperatureCodeData = trd.getData();
             }
             thingMagicReaderWrapper.returnObject(tagReadData);
         }
@@ -376,7 +377,7 @@ public class ThingMagicDriver {
             return null;
         }
 
-        final TagTemperatureReadData calibrationReadData = readCalibrationTagTemperature(tagReadData.getEpc(), antenna, readDuration);
+        final TagTemperatureReadData calibrationReadData = readCalibrationTagTemperature(epc, antenna, readDuration);
         if (calibrationReadData == null) {
             if (IS_LOGGING_ENABLED) System.out.println("Can't read calibration data.");
 
