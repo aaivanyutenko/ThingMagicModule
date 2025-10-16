@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     public void onTagReads(TagReadData[] tagReads) {
         for (TagReadData tagData : tagReads) {
             System.out.printf("TagReadData: epc = %s, rssi = %s", tagData.getEpc(), tagData.getRssi());
+            System.out.println();
         }
     }
 }

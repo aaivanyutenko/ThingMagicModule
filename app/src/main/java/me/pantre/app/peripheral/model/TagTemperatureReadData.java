@@ -66,14 +66,17 @@ public class TagTemperatureReadData extends TagReadData {
     public boolean setCalibrationDataWithCRC(final byte[] data) {
         if (IS_LOGGING_ENABLED)
             System.out.printf("Calibration raw data with CRC: %s", Arrays.toString(data));
+        System.out.println();
 
         if (checkCalibrationDataWithCRC(data)) {
             final byte[] crcData = Arrays.copyOfRange(data, 0, CRC_DATA_SIZE);
             if (IS_LOGGING_ENABLED) System.out.printf("CRC raw data: %s", Arrays.toString(crcData));
+            System.out.println();
 
 
             final byte[] calibrationData = Arrays.copyOfRange(data, CRC_DATA_SIZE, CALIBRATION_DATA_WITH_CRC_SIZE);
             if (IS_LOGGING_ENABLED) System.out.printf("CRC calibration data: %s", Arrays.toString(crcData));
+            System.out.println();
 
 
             // Reverse calibration data to calculate CRC value.
@@ -88,6 +91,7 @@ public class TagTemperatureReadData extends TagReadData {
             final int calcCrcValue = PantryUtils.crc16(reversedCalibrationData);
             if (IS_LOGGING_ENABLED)
                 System.out.printf("CRC value: %d, calc CRC value: %d", crcValue, calcCrcValue);
+            System.out.println();
 
 
             if (crcValue == calcCrcValue) {
@@ -95,6 +99,7 @@ public class TagTemperatureReadData extends TagReadData {
             } else {
                 if (IS_LOGGING_ENABLED)
                     System.out.printf("CRC check failed. CRC value: %d, calc CRC value: %d", crcValue, calcCrcValue);
+                System.out.println();
             }
         }
 
@@ -109,6 +114,7 @@ public class TagTemperatureReadData extends TagReadData {
      */
     public boolean setCalibrationData(final byte[] data) {
         if (IS_LOGGING_ENABLED) System.out.printf("Calibration raw data: %s", Arrays.toString(data));
+        System.out.println();
 
         if (checkCalibrationData(data)) {
             final long value = PantryUtils.byteArrayToLong(data);
@@ -127,6 +133,7 @@ public class TagTemperatureReadData extends TagReadData {
 
             if (IS_LOGGING_ENABLED)
                 System.out.printf("Calibration data: code1=%d, temp1=%d, code2=%d, temp2=%d", code1, temp1, code2, temp2);
+            System.out.println();
             return true;
         }
 
@@ -138,6 +145,7 @@ public class TagTemperatureReadData extends TagReadData {
      */
     public boolean setTemperatureCodeData(final byte[] data) {
         if (IS_LOGGING_ENABLED) System.out.printf("Temperature code raw data: %s", Arrays.toString(data));
+        System.out.println();
         if (checkTemperatureCodeData(data)) {
             final ByteBuffer wrapped = ByteBuffer.wrap(data);
 
@@ -146,6 +154,7 @@ public class TagTemperatureReadData extends TagReadData {
             temperatureCode = wrapped.getShort() & mask;
 
             if (IS_LOGGING_ENABLED) System.out.printf("Temperature code is %d", temperatureCode);
+            System.out.println();
 
             return true;
         }

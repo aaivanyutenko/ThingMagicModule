@@ -46,6 +46,7 @@ public class DragonFruitFacade {
             return;
         }
         System.out.printf("%s initPeripherals() called.", KIT_NAME);
+        System.out.println();
         initPeripheralsInvoked = true;
 
         // Initialize thing magic driver.
@@ -59,10 +60,12 @@ public class DragonFruitFacade {
         final ScheduledExecutorService thingMagicConnectionScheduler = Executors.newSingleThreadScheduledExecutor();
         thingMagicConnectTask = thingMagicConnectionScheduler.scheduleWithFixedDelay(() -> {
             System.out.printf("Connecting ThingMagic. Attempt #%d", ++thingMagicConnectionRetryCounter);
+            System.out.println();
 
             thingMagicDriver.connect(mainActivity);
 
             System.out.printf("ThingMagic isConnected? %s", thingMagicDriver.isConnected());
+            System.out.println();
 
             if (thingMagicDriver.isConnected()) {
                 thingMagicConnectTask.cancel(true);
@@ -75,6 +78,7 @@ public class DragonFruitFacade {
      */
     public void setShelf(final int shelf) {
         if (IS_LOGGING_ENABLED) System.out.printf("Set shelf to %d", shelf);
+        System.out.println();
 
         switch (shelf) {
             case 1:

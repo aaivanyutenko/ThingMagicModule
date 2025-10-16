@@ -25,7 +25,6 @@ import com.thingmagic.TagOp;
 import com.thingmagic.TagProtocol;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -35,7 +34,7 @@ import me.pantre.app.peripheral.model.TagReadData;
 
 public class DragonfruitThingMagicWrapper {
     int TEMPERATURE_SENSOR_BIT_POINTER = 0xE0;
-    int TEMPERATURE_CODE_WORD_ADDRESS = 0xC;
+    int TEMPERATURE_CODE_WORD_ADDRESS = 0xE;
     int TEMPERATURE_CALIBRATION_WORD_ADDRESS = 0x8;
     byte TEMPERATURE_CALIBRATION_DATA_LENGTH = 4;
     int TEMPERATURE_WEIGHT = 3000;
@@ -94,12 +93,17 @@ public class DragonfruitThingMagicWrapper {
                     boolean hasPermission = manager.hasPermission(device);
                     int getInterfaceCount = device.getInterfaceCount();
                     System.out.printf("isFtDevice = %s%n", isFtDevice);
+                    System.out.println();
                     System.out.printf("hasPermission = %s", hasPermission);
+                    System.out.println();
                     System.out.printf("getInterfaceCount = %s", getInterfaceCount);
+                    System.out.println();
                     int addUsbDevice = ftD2xx.addUsbDevice(device);
                     System.out.printf("addUsbDevice = %s", addUsbDevice);
+                    System.out.println();
                     FT_Device ftdev = ftD2xx.openByUsbDevice(context, device);
                     System.out.printf("ftdev = %s", ftdev);
+                    System.out.println();
                     new AndroidUsbReflection(manager, ftdev, device, device.getDeviceClass());
                 } catch (D2xxManager.D2xxException e) {
                     new AndroidUsbReflection(manager, null, device, device.getDeviceClass());
@@ -159,12 +163,19 @@ public class DragonfruitThingMagicWrapper {
 
     private void logReaderInfo() throws Exception {
         System.out.printf("Region: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_REGION_ID));
+        System.out.println();
         System.out.printf("Hardware: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_HARDWARE));
+        System.out.println();
         System.out.printf("Serial: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_SERIAL));
+        System.out.println();
         System.out.printf("Model: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_MODEL));
+        System.out.println();
         System.out.printf("Software: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_VERSION_SOFTWARE));
+        System.out.println();
         System.out.printf("Command timeout: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_COMMANDTIMEOUT));
+        System.out.println();
         System.out.printf("Transport timeout: %s", thingMagicReader.paramGet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT));
+        System.out.println();
     }
 
     private void setupReaderDefaults() throws Exception {
@@ -214,6 +225,7 @@ public class DragonfruitThingMagicWrapper {
             thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlanAntInd[readPlanIndex]);
             if (IS_LOGGING_ENABLED)
                 System.out.printf("Read plan is %s", readPlanAntInd[readPlanIndex].toString());
+            System.out.println();
         }
     }
 
@@ -276,17 +288,16 @@ public class DragonfruitThingMagicWrapper {
     }
 
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, TagReadData tagReadData) throws Exception {
-
-//        final Gen2.Select gen2Select = new Gen2.Select(false, Gen2.Bank.USER, TEMPERATURE_SENSOR_BIT_POINTER, 0, new byte[]{});
-//        gen2Select.target = Gen2.Select.Target.Select;
-//        gen2Select.action = Gen2.Select.Action.OFF_N_NOP;
-//        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
+        final Gen2.Select gen2Select = new Gen2.Select(false, Gen2.Bank.USER, TEMPERATURE_SENSOR_BIT_POINTER, 0, new byte[]{});
+        final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
+        Object response = thingMagicReader.executeTagOp(onChipTempRead, gen2Select);
+        System.out.println("response = " + shortsToHexString((short[]) response));
 //
 //        // Keep weight high to make power cycle longer.
-//        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, 1000);
-//        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
+        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, 1000, true);
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
 //        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);
-//        TagReadData[] result = read(readDuration);
+        TagReadData[] result = read(readDuration);
 //        System.out.println("result = " + Arrays.toString(result));
 //
 //        // Read temperature code from the tag.
@@ -316,15 +327,15 @@ public class DragonfruitThingMagicWrapper {
 //        float t = parseTemperature(tempRaw);
 //        System.out.println("temperature (tid) = " + t);
 
-        Gen2.ReadData readOp = new Gen2.ReadData(
-                Gen2.Bank.USER,    // Memory bank
-                0x0E,              // Starting word address for temperature
-                (byte) 1           // Number of words to read (1 word = 2 bytes)
-        );
-        Gen2.TagData targetTag = new Gen2.TagData(tagReadData.getEpc());
-        TagFilter filter = new Gen2.Select(false, Gen2.Bank.EPC, 32, tagReadData.getEpc().length() * 4, targetTag.epcBytes());
-        Object response = thingMagicReader.executeTagOp(readOp, filter);
-        System.out.println("response = " + shortsToHexString((short[]) response));
+//        Gen2.ReadData readOp = new Gen2.ReadData(
+//                Gen2.Bank.USER,    // Memory bank
+//                0x0E,              // Starting word address for temperature
+//                (byte) 1           // Number of words to read (1 word = 2 bytes)
+//        );
+//        Gen2.TagData targetTag = new Gen2.TagData(tagReadData.getEpc());
+//        TagFilter filter = new Gen2.Select(false, Gen2.Bank.EPC, 32, tagReadData.getEpc().length() * 4, targetTag.epcBytes());
+//        Object response = thingMagicReader.executeTagOp(readOp, filter);
+//        System.out.println("response = " + shortsToHexString((short[]) response));
 
 //        Object tidObject = thingMagicReader.executeTagOp(new Gen2.ReadData(Gen2.Bank.RESERVED, 0xE, (byte) 1), select);
 //        System.out.println("tidObject = " + shortsToHexString((short[]) tidObject));
@@ -350,7 +361,7 @@ public class DragonfruitThingMagicWrapper {
 //        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, select, onChipTempRead, TEMPERATURE_WEIGHT, true);
 //        thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
 //        return read(readDuration);
-        return null;
+        return result;
     }
 
     private float parseTemperature(int rawValue) {
@@ -413,6 +424,7 @@ public class DragonfruitThingMagicWrapper {
     private MagnusTemperature parseTemperatureFromEPC(String epc, int rssi) {
         if (epc == null || epc.length() < 24) {
             System.out.printf("EPC too short: %s", epc);
+            System.out.println();
             return null;
         }
 
@@ -474,6 +486,7 @@ public class DragonfruitThingMagicWrapper {
 
         // Use Method 1 (most common), but log others for debugging
         System.out.printf("Temp conversions - M1: %.2f, M2: %.2f, M3: %.2f", temp1, temp2, temp3);
+        System.out.println();
 
         // Return the most reasonable value
         if (temp1 >= -40 && temp1 <= 85) return temp1;
@@ -550,6 +563,7 @@ public class DragonfruitThingMagicWrapper {
             thingMagicReader.paramSet(TMConstants.TMR_PARAM_RADIO_READPOWER, READ_POWER);
 
             System.out.printf("TM power was changed: %d", readPower);
+            System.out.println();
         } catch (ReaderException e) {
             e.printStackTrace();
         }

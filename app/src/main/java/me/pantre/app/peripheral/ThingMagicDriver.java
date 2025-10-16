@@ -5,12 +5,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.Toast;
 
-import com.thingmagic.Gen2;
-import com.thingmagic.MultiFilter;
 import com.thingmagic.ReaderException;
-import com.thingmagic.SimpleReadPlan;
-import com.thingmagic.TMConstants;
-import com.thingmagic.TagProtocol;
 
 import java.util.HashMap;
 import java.util.List;
@@ -119,6 +114,7 @@ public class ThingMagicDriver {
     public ThingMagicDriver(DragonFruitFacade dragonFruitFacade, final DragonfruitThingMagicWrapper thingMagicReaderWrapper,
                             final boolean shouldSleepAfterReading, final int chipAntennasCount, final int realAntennasCount) {
         System.out.printf("ThingMagicDriver started. Antennas: %d-%d", chipAntennasCount, realAntennasCount);
+        System.out.println();
         this.dragonFruitFacade = dragonFruitFacade;
         this.thingMagicReaderWrapper = thingMagicReaderWrapper;
 
@@ -141,11 +137,13 @@ public class ThingMagicDriver {
             if (thingMagicReaderWrapper.deviceHasPermission) {
                 thingMagicReaderWrapper.createReader();
                 System.out.printf("Trying to connect ThingMagic");
+                System.out.println();
                 thingMagicReaderWrapper.connect(LICENSE_KEY, RfidBand.US902, isOldThingMagicModule);
             }
 
             if (thingMagicReaderWrapper.isConnected()) {
                 System.out.printf("Already connected to ThingMagic");
+                System.out.println();
 
                 // Show a toast.
                 final Handler h = new Handler(context.getMainLooper());
@@ -257,6 +255,7 @@ public class ThingMagicDriver {
 
             if (IS_LOGGING_ENABLED)
                 System.out.printf("inside startReading(). readingCycleNumber=%d", readingCycleNumber);
+            System.out.println();
 
             // Create new inventory map
             final Map<String, InventoryReadItem> invReadItemMapForCycle = new HashMap<>(inventoryReadMap);
@@ -312,6 +311,7 @@ public class ThingMagicDriver {
             for (final TagReadData temperatureTagData : temperatureTagsData) {
                 if (IS_LOGGING_ENABLED)
                     System.out.printf("Read tag temperature[ antenna: %d multiplier: %d rssi %d ]", temperatureTagData.getAntenna(), temperatureTagData.getAntennaMultiplier(), temperatureTagData.getRssi());
+                System.out.println();
                 final List<Integer> shelvesList = List.of(temperatureTagData.getAntennaMultiplier());
                 for (int shelf = 1; shelf <= SHELVES_COUNT; shelf++) {
                     if (shelvesList.contains(shelf)) {
@@ -400,6 +400,7 @@ public class ThingMagicDriver {
     private TagTemperatureReadData readCalibrationTagTemperature(final String epc, final int antenna, final long readDuration) throws Exception {
         if (!calibrationMap.containsKey(epc)) {
             if (IS_LOGGING_ENABLED) System.out.printf("Read calibration data for epc %s", epc);
+            System.out.println();
 
             final TagReadData[] tagReads = thingMagicReaderWrapper.readTemperatureCalibration(epc, antenna, readDuration);
 
@@ -430,6 +431,7 @@ public class ThingMagicDriver {
             dragonFruitFacade.mainActivity.onTagReads(tagReads);
             if (IS_LOGGING_ENABLED)
                 System.out.printf("Done with read - shelf number: %d, num of tags read: %d, read time: %d", antennaMultiplier, tagReads.length, System.currentTimeMillis() - timeBeforeRead);
+            System.out.println();
 
             int minRssi = -10;
             String epc;
@@ -447,6 +449,7 @@ public class ThingMagicDriver {
 
                 if (epc.length() != EPC_VALID_LENGTH) { // Discard EPC that is not of length 24
                     System.out.printf("EPC ignored: %s", epc);
+                    System.out.println();
                 } else {
 
                     final InventoryReadItem existingItem = inventoryReadMap.get(epc);
@@ -478,6 +481,7 @@ public class ThingMagicDriver {
 //                    if (BuildConfig.DEBUG) {
                     if (IS_LOGGING_ENABLED)
                         System.out.printf("Found a tag temperature[ antenna: %d multiplier: %d rssi %d ]", tagReadData.getAntenna(), antennaMultiplier, tagReadData.getRssi());
+                    System.out.println();
 //                    }
                 } else {
                     // To simplify GC work return object back to the pool
@@ -486,6 +490,7 @@ public class ThingMagicDriver {
             }
 
             if (IS_LOGGING_ENABLED) System.out.printf("Min RSSI of the tags read above: %d", minRssi);
+            System.out.println();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -501,6 +506,7 @@ public class ThingMagicDriver {
         thingMagicReaderWrapper.setReadPower(thingMagicReaderWrapper.getMaxReadPower());
 
         System.out.printf("TM durations were changed: antennaSleep=%d, readDurationInd=%d", antennaSleep, readDurationInd);
+        System.out.println();
     }
 
     /**
