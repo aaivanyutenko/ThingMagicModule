@@ -290,11 +290,11 @@ public class DragonfruitThingMagicWrapper {
     public TagReadData[] readTemperatureCode(final int antenna, final long readDuration, TagReadData tagReadData) throws Exception {
         final Gen2.Select gen2Select = new Gen2.Select(false, Gen2.Bank.USER, TEMPERATURE_SENSOR_BIT_POINTER, 0, new byte[]{});
         final TagOp onChipTempRead = new Gen2.ReadData(Gen2.Bank.RESERVED, TEMPERATURE_CODE_WORD_ADDRESS, (byte) 1);
-        Object response = thingMagicReader.executeTagOp(onChipTempRead, gen2Select);
-        System.out.println("response = " + shortsToHexString((short[]) response));
+//        Object response = thingMagicReader.executeTagOp(onChipTempRead, gen2Select);
+//        System.out.println("response = " + shortsToHexString((short[]) response));
 //
 //        // Keep weight high to make power cycle longer.
-        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, 1000, true);
+        final SimpleReadPlan readPlan = new SimpleReadPlan(new int[]{antenna}, TagProtocol.GEN2, gen2Select, onChipTempRead, 3000, true);
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_READ_PLAN, readPlan);
 //        thingMagicReader.paramSet(TMConstants.TMR_PARAM_GEN2_T4, 3000);
         TagReadData[] result = read(readDuration);
