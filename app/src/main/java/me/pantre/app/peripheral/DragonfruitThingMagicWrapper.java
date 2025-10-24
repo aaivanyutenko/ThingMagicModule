@@ -23,6 +23,7 @@ import com.thingmagic.TMConstants;
 import com.thingmagic.TagFilter;
 import com.thingmagic.TagOp;
 import com.thingmagic.TagProtocol;
+import com.thingmagic.TransportListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -132,6 +133,7 @@ public class DragonfruitThingMagicWrapper {
         tagReadDataPool = new SingleThreadPooledObject<>(new TagReadData.PooledObjectFactory());
         try {
             thingMagicReader.connect();
+            thingMagicReader.addTransportListener(Reader.simpleTransportListener);
             if (isConnected()) {
                 setupReaderParameters(licenseKey, rfidBand, isOldThingMagicModule);
             }
@@ -183,8 +185,8 @@ public class DragonfruitThingMagicWrapper {
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_TAGREADDATA_UNIQUEBYANTENNA, false);
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_TAGREADDATA_RECORDHIGHESTRSSI, true);
         thingMagicReader.paramSet(TMConstants.TMR_PARAM_ENABLE_READ_FILTERING, true);
-        thingMagicReader.paramSet(TMConstants.TMR_PARAM_COMMANDTIMEOUT, 2000);
-        thingMagicReader.paramSet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT, 7000);
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_COMMANDTIMEOUT, 4000);
+        thingMagicReader.paramSet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT, 14000);
 //        thingMagicReader.paramSet(TMConstants.TMR_PARAM_POWERMODE, Reader.Region);
     }
 
@@ -561,7 +563,7 @@ public class DragonfruitThingMagicWrapper {
         }
         try {
             readPower = power;
-            thingMagicReader.paramSet(TMConstants.TMR_PARAM_RADIO_READPOWER, READ_POWER);
+            thingMagicReader.paramSet(TMConstants.TMR_PARAM_RADIO_READPOWER, 800);
 
             System.out.printf("TM power was changed: %d", readPower);
             System.out.println();
