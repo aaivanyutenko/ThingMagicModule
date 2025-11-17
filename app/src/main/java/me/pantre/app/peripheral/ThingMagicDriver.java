@@ -142,19 +142,23 @@ public class ThingMagicDriver {
             }
 
             if (thingMagicReaderWrapper.isConnected()) {
-                System.out.printf("Already connected to ThingMagic");
-                System.out.println();
-
-                // Show a toast.
-                final Handler h = new Handler(context.getMainLooper());
-                h.post(() -> Toast.makeText(context, "PD3 ready", Toast.LENGTH_LONG).show());
-
-                startReading();
-            } else {
-                // Connection failed. Giving up.
-                System.out.println("TM connection failed. Giving up.");
-                connectionFailed = true;
+                thingMagicReaderWrapper.updateFirmware();
             }
+
+//            if (thingMagicReaderWrapper.isConnected()) {
+//                System.out.printf("Already connected to ThingMagic");
+//                System.out.println();
+//
+//                // Show a toast.
+//                final Handler h = new Handler(context.getMainLooper());
+//                h.post(() -> Toast.makeText(context, "PD3 ready", Toast.LENGTH_LONG).show());
+//
+//                startReading();
+//            } else {
+//                // Connection failed. Giving up.
+//                System.out.println("TM connection failed. Giving up.");
+//                connectionFailed = true;
+//            }
 
         } catch (Exception e) {
             e.printStackTrace();

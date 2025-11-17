@@ -23,8 +23,9 @@ import com.thingmagic.TMConstants;
 import com.thingmagic.TagFilter;
 import com.thingmagic.TagOp;
 import com.thingmagic.TagProtocol;
-import com.thingmagic.TransportListener;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,11 +55,16 @@ public class DragonfruitThingMagicWrapper {
     private static final String ACTION_USB_PERMISSION = "com.thingmagic.rfidreader.services.USB_PERMISSION";
     private static final int READ_POWER = 3000; // 30 dBm
 
+    private Context context;
     public Reader thingMagicReader;
     private ReadPlan[] readPlanAntInd;
     private Integer readPower = -1;
     private SingleThreadPooledObject<TagReadData> tagReadDataPool;
     boolean deviceHasPermission;
+
+    public DragonfruitThingMagicWrapper(Context context) {
+        this.context = context;
+    }
 
     public void createReadPlans(int chipAntennasCount) {
         readPlanAntInd = new ReadPlan[chipAntennasCount];
@@ -374,6 +380,20 @@ public class DragonfruitThingMagicWrapper {
             rawValue -= 65536; // Handle negative temperatures
         }
         return rawValue / 10.0f; // Adjust divisor based on resolution
+    }
+
+    public void updateFirmware() {
+        System.out.println("DragonfruitThingMagicWrapper.updateFirmware called");
+        try (InputStream firmware = context.getAssets().open("m7eapp.sim")) {
+            try {
+                thingMagicReader.firmwareLoad(firmware);
+                System.out.println("Firmware updated successfully!");
+            } catch (ReaderException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static class MagnusTemperature {

@@ -50,7 +50,7 @@ public class DragonFruitFacade {
         initPeripheralsInvoked = true;
 
         // Initialize thing magic driver.
-        thingMagicDriver = new ThingMagicDriver(this, new DragonfruitThingMagicWrapper(), false,
+        thingMagicDriver = new ThingMagicDriver(this, new DragonfruitThingMagicWrapper(mainActivity), false,
                 THING_MAGIC_CHIP_ANTENNAS_COUNT, THING_MAGIC_REAL_ANTENNAS_COUNT);
         initGpioPins();
 
