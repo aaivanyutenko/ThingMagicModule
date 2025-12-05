@@ -142,23 +142,19 @@ public class ThingMagicDriver {
             }
 
             if (thingMagicReaderWrapper.isConnected()) {
-                thingMagicReaderWrapper.updateFirmware();
-            }
+                System.out.printf("Already connected to ThingMagic");
+                System.out.println();
 
-//            if (thingMagicReaderWrapper.isConnected()) {
-//                System.out.printf("Already connected to ThingMagic");
-//                System.out.println();
-//
-//                // Show a toast.
-//                final Handler h = new Handler(context.getMainLooper());
-//                h.post(() -> Toast.makeText(context, "PD3 ready", Toast.LENGTH_LONG).show());
-//
-//                startReading();
-//            } else {
-//                // Connection failed. Giving up.
-//                System.out.println("TM connection failed. Giving up.");
-//                connectionFailed = true;
-//            }
+                // Show a toast.
+                final Handler h = new Handler(context.getMainLooper());
+                h.post(() -> Toast.makeText(context, "PD3 ready", Toast.LENGTH_LONG).show());
+
+                startReading();
+            } else {
+                // Connection failed. Giving up.
+                System.out.println("TM connection failed. Giving up.");
+                connectionFailed = true;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -433,10 +429,12 @@ public class ThingMagicDriver {
         try {
             final long timeBeforeRead = System.currentTimeMillis();
             final TagReadData[] tagReads = thingMagicReaderWrapper.read(readOnMs);
-            dragonFruitFacade.mainActivity.onTagReads(tagReads);
-            if (IS_LOGGING_ENABLED)
-                System.out.printf("Done with read - shelf number: %d, num of tags read: %d, read time: %d", antennaMultiplier, tagReads.length, System.currentTimeMillis() - timeBeforeRead);
-            System.out.println();
+            if (IS_LOGGING_ENABLED) {
+                System.out.printf("(hello) Done with read - shelf number: %d, num of tags read: %d, read time: %d\n", antennaMultiplier, tagReads.length, System.currentTimeMillis() - timeBeforeRead);
+                for (TagReadData tagRead : tagReads) {
+                    System.out.printf("\t(hello) tag = %s\n", tagRead.toString());
+                }
+            }
 
             int minRssi = -10;
             String epc;

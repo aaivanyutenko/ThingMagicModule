@@ -14,6 +14,7 @@ import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.FT_Device;
 import com.thingmagic.AndroidUsbReflection;
 import com.thingmagic.Gen2;
+import com.thingmagic.ReadListener;
 import com.thingmagic.ReadPlan;
 import com.thingmagic.Reader;
 import com.thingmagic.ReaderException;
@@ -55,7 +56,7 @@ public class DragonfruitThingMagicWrapper {
     private static final String ACTION_USB_PERMISSION = "com.thingmagic.rfidreader.services.USB_PERMISSION";
     private static final int READ_POWER = 3000; // 30 dBm
 
-    private Context context;
+    private final Context context;
     public Reader thingMagicReader;
     private ReadPlan[] readPlanAntInd;
     private Integer readPower = -1;
@@ -142,6 +143,7 @@ public class DragonfruitThingMagicWrapper {
             thingMagicReader.addTransportListener(Reader.simpleTransportListener);
             if (isConnected()) {
                 setupReaderParameters(licenseKey, rfidBand, isOldThingMagicModule);
+                initTagReadsReadListener();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -238,16 +240,21 @@ public class DragonfruitThingMagicWrapper {
         }
     }
 
+
+    private final List<TagReadData> tagReadsResult = new ArrayList<>();
+    private final ReadListener tagReadsListener = (reader, tagReadData) -> tagReadsResult.add(transformTagReadData(tagReadData));
+    private void initTagReadsReadListener() {
+        thingMagicReader.addReadListener(tagReadsListener);
+    }
+
     public TagReadData[] read(final long duration) throws Exception {
-        final List<TagReadData> result = new ArrayList<>();
-
-        final com.thingmagic.TagReadData[] tagReads = thingMagicReader.read(duration);
-
-        for (com.thingmagic.TagReadData tagReadData : tagReads) {
-            result.add(transformTagReadData(tagReadData));
-        }
-
-        return result.toArray(new TagReadData[0]);
+        System.out.println("(hello) tagReadsResult.clear();");
+        tagReadsResult.clear();
+        System.out.println("(hello) tagReadsResult.startReading();");
+        thingMagicReader.startReading();
+        Thread.sleep(duration);
+        thingMagicReader.stopReading();
+        return tagReadsResult.toArray(new TagReadData[0]);
     }
 
     private TagReadData transformTagReadData(final com.thingmagic.TagReadData tagReadData) {

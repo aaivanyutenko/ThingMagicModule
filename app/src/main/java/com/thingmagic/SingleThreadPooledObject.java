@@ -35,7 +35,7 @@ public class SingleThreadPooledObject<T> {
     /**
      * @return object from the pool or create new one.
      */
-    public T borrowObject() {
+    public synchronized T borrowObject() {
         checkThread();
 
         T o = idleObjects.poll();
@@ -52,7 +52,7 @@ public class SingleThreadPooledObject<T> {
     /**
      * Return object to the pool or add new one.
      */
-    public void returnObject(final T o) {
+    public synchronized void returnObject(final T o) {
         checkThread();
 
         if (o != null) {
@@ -67,7 +67,7 @@ public class SingleThreadPooledObject<T> {
      */
     private void checkThread() {
         if (startedInThread != Thread.currentThread()) {
-            throw new IllegalStateException("You can use pool only in one thread.");
+            System.out.println("You can use pool only in one thread.");
         }
     }
 
